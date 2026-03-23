@@ -318,7 +318,7 @@ export const actions = {
           }),
         );
 
-        const roundStartedEvents = roundsToNotify.flatMap((round: number | null) =>
+        const roundStartedEvents = roundsToNotify.flatMap(round =>
           facultyAndStaff.map(({ email, givenName, familyName }) =>
             RoundStartedEvent.create({
               draftId: Number(draftId),
