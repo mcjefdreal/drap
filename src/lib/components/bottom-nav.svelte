@@ -16,9 +16,7 @@
   <div class="flex size-12 place-content-center items-center">
     <button
       class="flex place-content-center rounded-lg p-3 active:bg-sidebar-accent active:text-sidebar-accent-foreground"
-      onclick={_ => {
-        sidebar.toggle();
-      }}
+      onclick={sidebar.toggle.bind(sidebar)}
     >
       <MenuIcon size={24} />
       <span class="sr-only">Toggle Sidebar</span>
