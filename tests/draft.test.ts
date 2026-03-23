@@ -878,9 +878,14 @@ test.describe('Draft Lifecycle', () => {
         cslHeadPage,
       }) => {
         // Patient is CSL's only Round 1 preferrer and is already in facultyChoiceUser.
-        // Editing must NOT trigger the no-preferences auto-acknowledge guard.
-        const status = await postFacultyRankings(cslHeadPage, 1, 1);
-        expect(status).not.toBe(409);
+        // Re-submitting with Patient still selected must NOT trigger the
+        // no-preferences auto-acknowledge guard (HTTP 409).
+        await cslHeadPage.goto('/dashboard/students/');
+        cslHeadPage.on('dialog', dialog => dialog.accept());
+        const responsePromise = cslHeadPage.waitForResponse('/dashboard/students/?/rankings');
+        await cslHeadPage.getByRole('button', { name: 'Update Selection' }).click();
+        const response = await responsePromise;
+        expect(response.status()).not.toBe(409);
       });
     });
 
