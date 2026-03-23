@@ -1,11 +1,9 @@
 <script lang="ts">
   import CircleHelpIcon from '@lucide/svelte/icons/circle-help';
-  import type { Snippet } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
   import { toast } from 'svelte-sonner';
 
   import * as Avatar from '$lib/components/ui/avatar';
-  import * as Dialog from '$lib/components/ui/dialog';
   import * as Popover from '$lib/components/ui/popover';
   import { assert } from '$lib/assert';
   import { Button } from '$lib/components/ui/button';
@@ -26,8 +24,7 @@
     students: Student[];
     remainingQuota: number;
     initialSelectedIds?: string[];
-    submitLabel?: Snippet;
-    inDialog?: boolean;
+    hasExistingSubmission?: boolean;
   }
 
   const {
@@ -36,11 +33,8 @@
     students,
     remainingQuota,
     initialSelectedIds = [],
-    submitLabel,
-    inDialog = false,
+    hasExistingSubmission = false,
   }: Props = $props();
-
-  let dialogCloseRef: HTMLButtonElement | null = $state(null);
 
   const addedIds = new SvelteSet<string>();
   const removedIds = new SvelteSet<string>();
@@ -50,8 +44,8 @@
     for (const id of addedIds) if (!initialSelectedIds.includes(id)) ids.push(id);
     return ids;
   });
+
   const disabled = $derived(remainingQuota - selectedIds.length < 0);
-  const editing = $derived(initialSelectedIds.length > 0);
 
   function toggleSelection(id: string) {
     if (initialSelectedIds.includes(id)) {
@@ -67,6 +61,11 @@
   function hasSelection(id: string) {
     return (initialSelectedIds.includes(id) && !removedIds.has(id)) || addedIds.has(id);
   }
+
+  function resetSelectionState() {
+    addedIds.clear();
+    removedIds.clear();
+  }
 </script>
 
 <form
@@ -75,29 +74,22 @@
   use:enhance={({ formData, submitter, cancel }) => {
     const count = formData.getAll('students').length;
     // eslint-disable-next-line no-alert
-    const confirmed = confirm(
-      editing
-        ? `Are you sure you want to update your selections to ${count} students?`
-        : `Are you sure you want to select these ${count} students?`,
-    );
-    if (!confirmed) {
+    if (!confirm(`Are you sure you want to select these ${count} students?`)) {
       cancel();
       return;
     }
+
     assert(submitter !== null);
     assert(submitter instanceof HTMLButtonElement);
     submitter.disabled = true;
+
     return async ({ update, result }) => {
       submitter.disabled = false;
-
       await update();
 
       switch (result.type) {
         case 'success':
-          toast.success(editing ? 'Selections updated.' : 'Selections submitted.');
-          addedIds.clear();
-          removedIds.clear();
-          dialogCloseRef?.click();
+          toast.success('Selections submitted.');
           break;
         case 'error':
           switch (result.status) {
@@ -111,28 +103,16 @@
               toast.error('An unexpected error occurred.');
               break;
           }
-          addedIds.clear();
-          removedIds.clear();
-          dialogCloseRef?.click();
           break;
         case 'failure':
-          switch (result.status) {
-            case 409:
-              toast.error('Round advanced while editing. No changes saved.');
-              break;
-            default:
-              toast.error(
-                editing ? 'Failed to update selections.' : 'Failed to submit selections.',
-              );
-              break;
-          }
-          addedIds.clear();
-          removedIds.clear();
-          dialogCloseRef?.click();
+          if (result.status === 409) toast.error('Round advanced while editing. No changes saved.');
+          else toast.error('Failed to submit selections.');
           break;
         default:
           break;
       }
+
+      resetSelectionState();
     };
   }}
   class="flex flex-col gap-4 inert:opacity-20"
@@ -187,20 +167,8 @@
     </span>
   </div>
   <div class="flex items-center gap-2">
-    {#if inDialog}
-      <Dialog.Close bind:ref={dialogCloseRef} type="button" class="hidden" />
-      <Dialog.Close>
-        {#snippet child({ props })}
-          <Button type="button" variant="outline" {...props}>Cancel</Button>
-        {/snippet}
-      </Dialog.Close>
-    {/if}
     <Button type="submit" class="grow" {disabled}>
-      {#if submitLabel}
-        {@render submitLabel()}
-      {:else}
-        {editing ? 'Update Selection' : 'Submit'}
-      {/if}
+      {hasExistingSubmission ? 'Update Selection' : 'Submit Selection'}
     </Button>
     <Popover.Root>
       <Popover.Trigger>
