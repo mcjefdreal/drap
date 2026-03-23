@@ -31,6 +31,13 @@
   const { user }: Props = $props();
   const { pathname } = $derived(page.url);
   const sidebar = Sidebar.useSidebar();
+
+  function closeMobileSidebar() {
+    console.log('closeMobileSidebar');
+    if (sidebar.isMobile) {
+      sidebar.setOpenMobile(false);
+    }
+  }
 </script>
 
 <TooltipProvider>
@@ -65,7 +72,7 @@
             <Sidebar.MenuItem>
               <Sidebar.MenuButton isActive={pathname === '/'} tooltipContent="Home">
                 {#snippet child({ props })}
-                  <a href={resolve('/')} {...props}>
+                  <a href={resolve('/')} {...props} onclick={closeMobileSidebar}>
                     <HomeIcon class="size-5" />
                     <span>Home</span>
                   </a>
@@ -78,7 +85,7 @@
                 tooltipContent="History"
               >
                 {#snippet child({ props })}
-                  <a href={resolve('/history/')} {...props}>
+                  <a href={resolve('/history/')} {...props} onclick={closeMobileSidebar}>
                     <ClockIcon class="size-5" />
                     <span>History</span>
                   </a>
@@ -88,7 +95,7 @@
             <Sidebar.MenuItem>
               <Sidebar.MenuButton isActive={pathname === '/privacy/'} tooltipContent="Privacy">
                 {#snippet child({ props })}
-                  <a href={resolve('/privacy/')} {...props}>
+                  <a href={resolve('/privacy/')} {...props} onclick={closeMobileSidebar}>
                     <LockKeyholeIcon class="size-5" />
                     <span>Privacy</span>
                   </a>
@@ -112,7 +119,11 @@
                     tooltipContent="Admin"
                   >
                     {#snippet child({ props })}
-                      <a href={resolve('/dashboard/admin/')} {...props}>
+                      <a
+                        href={resolve('/dashboard/admin/')}
+                        {...props}
+                        onclick={closeMobileSidebar}
+                      >
                         <Avatar.Root class="size-5">
                           <Avatar.Image
                             src={user.avatarUrl}
@@ -135,7 +146,11 @@
                       tooltipContent="Labs"
                     >
                       {#snippet child({ props })}
-                        <a href={resolve('/dashboard/labs/')} {...props}>
+                        <a
+                          href={resolve('/dashboard/labs/')}
+                          {...props}
+                          onclick={closeMobileSidebar}
+                        >
                           <FlaskConicalIcon class="size-5" />
                           <span>Labs</span>
                         </a>
@@ -148,7 +163,11 @@
                       tooltipContent="Users"
                     >
                       {#snippet child({ props })}
-                        <a href={resolve('/dashboard/users/')} {...props}>
+                        <a
+                          href={resolve('/dashboard/users/')}
+                          {...props}
+                          onclick={closeMobileSidebar}
+                        >
                           <UsersIcon class="size-5" />
                           <span>Users</span>
                         </a>
@@ -161,7 +180,11 @@
                       tooltipContent="Drafts"
                     >
                       {#snippet child({ props })}
-                        <a href={resolve('/dashboard/drafts/')} {...props}>
+                        <a
+                          href={resolve('/dashboard/drafts/')}
+                          {...props}
+                          onclick={closeMobileSidebar}
+                        >
                           <ClipboardListIcon class="size-5" />
                           <span>Drafts</span>
                         </a>
@@ -174,7 +197,11 @@
                       tooltipContent="Email"
                     >
                       {#snippet child({ props })}
-                        <a href={resolve('/dashboard/email/')} {...props}>
+                        <a
+                          href={resolve('/dashboard/email/')}
+                          {...props}
+                          onclick={closeMobileSidebar}
+                        >
                           <MailIcon class="size-5" />
                           <span>Email</span>
                         </a>
@@ -189,7 +216,11 @@
                       tooltipContent="Lab"
                     >
                       {#snippet child({ props })}
-                        <a href={resolve('/dashboard/lab/')} {...props}>
+                        <a
+                          href={resolve('/dashboard/lab/')}
+                          {...props}
+                          onclick={closeMobileSidebar}
+                        >
                           <FlaskConicalIcon class="size-5" />
                           <span>Lab</span>
                         </a>
@@ -202,7 +233,11 @@
                       tooltipContent="Students"
                     >
                       {#snippet child({ props })}
-                        <a href={resolve('/dashboard/students/')} {...props}>
+                        <a
+                          href={resolve('/dashboard/students/')}
+                          {...props}
+                          onclick={closeMobileSidebar}
+                        >
                           <GraduationCapIcon class="size-5" />
                           <span>Students</span>
                         </a>
@@ -218,7 +253,11 @@
                     tooltipContent="Student"
                   >
                     {#snippet child({ props })}
-                      <a href={resolve('/dashboard/student/')} {...props}>
+                      <a
+                        href={resolve('/dashboard/student/')}
+                        {...props}
+                        onclick={closeMobileSidebar}
+                      >
                         <GraduationCapIcon class="size-5" />
                         <span>Student</span>
                       </a>
@@ -233,7 +272,11 @@
                       tooltipContent="Lab"
                     >
                       {#snippet child({ props })}
-                        <a href={resolve('/dashboard/lab/')} {...props}>
+                        <a
+                          href={resolve('/dashboard/lab/')}
+                          {...props}
+                          onclick={closeMobileSidebar}
+                        >
                           <FlaskConicalIcon class="size-5" />
                           <span>Lab</span>
                         </a>
@@ -255,6 +298,7 @@
               {#snippet child({ props })}
                 <a
                   {...props}
+                  onclick={closeMobileSidebar}
                   href={resolve('/dashboard/oauth/login')}
                   class={buttonVariants({
                     variant: 'ghost',
@@ -289,6 +333,7 @@
                   <Button
                     {...props}
                     type="submit"
+                    onclick={closeMobileSidebar}
                     variant="ghost"
                     class="size-full cursor-pointer justify-start rounded-md p-2 text-sm"
                   >
