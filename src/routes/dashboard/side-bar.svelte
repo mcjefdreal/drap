@@ -64,7 +64,7 @@
           <Sidebar.MenuItem>
             <Sidebar.MenuButton isActive={pathname === '/'} tooltipContent="Home">
               {#snippet child({ props })}
-                <a href={resolve('/')} {...props} onclick={closeMobileSidebar}>
+                <a href={resolve('/')} onclick={closeMobileSidebar} {...props}>
                   <HomeIcon class="size-5" />
                   <span>Home</span>
                 </a>
@@ -77,7 +77,7 @@
               tooltipContent="History"
             >
               {#snippet child({ props })}
-                <a href={resolve('/history/')} {...props} onclick={closeMobileSidebar}>
+                <a href={resolve('/history/')} onclick={closeMobileSidebar} {...props}>
                   <ClockIcon class="size-5" />
                   <span>History</span>
                 </a>
@@ -85,9 +85,9 @@
             </Sidebar.MenuButton>
           </Sidebar.MenuItem>
           <Sidebar.MenuItem>
-            <Sidebar.MenuButton isActive={pathname === '/privacy/'} tooltipContent="Privacy">
+            <Sidebar.MenuButton isActive={pathname.startsWith('/privacy/')} tooltipContent="Privacy">
               {#snippet child({ props })}
-                <a href={resolve('/privacy/')} {...props} onclick={closeMobileSidebar}>
+                <a href={resolve('/privacy/')} onclick={closeMobileSidebar} {...props}>
                   <LockKeyholeIcon class="size-5" />
                   <span>Privacy</span>
                 </a>
@@ -107,11 +107,11 @@
               <!-- Admin/Faculty: Admin entry -->
               <Sidebar.MenuItem>
                 <Sidebar.MenuButton
-                  isActive={pathname === '/dashboard/admin/'}
+                  isActive={pathname.startsWith('dashboard/admin/')}
                   tooltipContent="Admin"
                 >
                   {#snippet child({ props })}
-                    <a href={resolve('/dashboard/admin/')} {...props} onclick={closeMobileSidebar}>
+                    <a href={resolve('/dashboard/admin/')} onclick={closeMobileSidebar} {...props}>
                       <Avatar.Root class="size-5">
                         <Avatar.Image
                           src={user.avatarUrl}
@@ -130,11 +130,11 @@
                 <!-- Admin (no lab): Admin links -->
                 <Sidebar.MenuItem>
                   <Sidebar.MenuButton
-                    isActive={pathname === '/dashboard/labs/'}
+                    isActive={pathname.startsWith('/dashboard/labs/')}
                     tooltipContent="Labs"
                   >
                     {#snippet child({ props })}
-                      <a href={resolve('/dashboard/labs/')} {...props} onclick={closeMobileSidebar}>
+                      <a href={resolve('/dashboard/labs/')} onclick={closeMobileSidebar} {...props}>
                         <FlaskConicalIcon class="size-5" />
                         <span>Labs</span>
                       </a>
@@ -143,14 +143,14 @@
                 </Sidebar.MenuItem>
                 <Sidebar.MenuItem>
                   <Sidebar.MenuButton
-                    isActive={pathname === '/dashboard/users/'}
+                    isActive={pathname.startsWith('/dashboard/users/')}
                     tooltipContent="Users"
                   >
                     {#snippet child({ props })}
                       <a
                         href={resolve('/dashboard/users/')}
-                        {...props}
                         onclick={closeMobileSidebar}
+                        {...props}
                       >
                         <UsersIcon class="size-5" />
                         <span>Users</span>
@@ -166,8 +166,8 @@
                     {#snippet child({ props })}
                       <a
                         href={resolve('/dashboard/drafts/')}
-                        {...props}
                         onclick={closeMobileSidebar}
+                        {...props}
                       >
                         <ClipboardListIcon class="size-5" />
                         <span>Drafts</span>
@@ -177,14 +177,14 @@
                 </Sidebar.MenuItem>
                 <Sidebar.MenuItem>
                   <Sidebar.MenuButton
-                    isActive={pathname === '/dashboard/email/'}
+                    isActive={pathname.startsWith('/dashboard/email/')}
                     tooltipContent="Email"
                   >
                     {#snippet child({ props })}
                       <a
                         href={resolve('/dashboard/email/')}
-                        {...props}
                         onclick={closeMobileSidebar}
+                        {...props}
                       >
                         <MailIcon class="size-5" />
                         <span>Email</span>
@@ -196,11 +196,11 @@
                 <!-- Faculty (has lab): Lab + Students links -->
                 <Sidebar.MenuItem>
                   <Sidebar.MenuButton
-                    isActive={pathname === '/dashboard/lab/'}
+                    isActive={pathname.startsWith('/dashboard/lab/')}
                     tooltipContent="Lab"
                   >
                     {#snippet child({ props })}
-                      <a href={resolve('/dashboard/lab/')} {...props} onclick={closeMobileSidebar}>
+                      <a href={resolve('/dashboard/lab/')} onclick={closeMobileSidebar} {...props}>
                         <FlaskConicalIcon class="size-5" />
                         <span>Lab</span>
                       </a>
@@ -209,14 +209,14 @@
                 </Sidebar.MenuItem>
                 <Sidebar.MenuItem>
                   <Sidebar.MenuButton
-                    isActive={pathname === '/dashboard/students/'}
+                    isActive={pathname.startsWith('/dashboard/students/')}
                     tooltipContent="Students"
                   >
                     {#snippet child({ props })}
                       <a
                         href={resolve('/dashboard/students/')}
-                        {...props}
                         onclick={closeMobileSidebar}
+                        {...props}
                       >
                         <GraduationCapIcon class="size-5" />
                         <span>Students</span>
@@ -229,14 +229,14 @@
               <!-- Student: Student entry -->
               <Sidebar.MenuItem>
                 <Sidebar.MenuButton
-                  isActive={pathname === '/dashboard/student/'}
+                  isActive={pathname.startsWith('/dashboard/student/')}
                   tooltipContent="Student"
                 >
                   {#snippet child({ props })}
                     <a
                       href={resolve('/dashboard/student/')}
-                      {...props}
                       onclick={closeMobileSidebar}
+                      {...props}
                     >
                       <GraduationCapIcon class="size-5" />
                       <span>Student</span>
@@ -248,11 +248,11 @@
                 <!-- Assigned student: Lab link -->
                 <Sidebar.MenuItem>
                   <Sidebar.MenuButton
-                    isActive={pathname === '/dashboard/lab/'}
+                    isActive={pathname.startsWith('/dashboard/lab/')}
                     tooltipContent="Lab"
                   >
                     {#snippet child({ props })}
-                      <a href={resolve('/dashboard/lab/')} {...props} onclick={closeMobileSidebar}>
+                      <a href={resolve('/dashboard/lab/')} onclick={closeMobileSidebar} {...props}>
                         <FlaskConicalIcon class="size-5" />
                         <span>Lab</span>
                       </a>
@@ -273,8 +273,8 @@
           <Sidebar.MenuButton tooltipContent="Login">
             {#snippet child({ props })}
               <a
-                {...props}
                 onclick={closeMobileSidebar}
+                {...props}
                 href={resolve('/dashboard/oauth/login')}
                 class={buttonVariants({
                   variant: 'ghost',
