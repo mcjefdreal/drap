@@ -14,7 +14,9 @@
 <SidebarProvider>
   <div class="flex h-dvh w-full overflow-hidden">
     <SideBar {user} />
-    <main class="grow space-y-4 overflow-y-auto p-4 pt-16 md:pt-4">{@render children?.()}</main>
+    <main class="grow space-y-4 overflow-y-auto px-4 pt-16 pb-20 md:pt-4 md:pb-0">
+      {@render children?.()}
+    </main>
   </div>
 </SidebarProvider>
 {#if dev && typeof user !== 'undefined'}

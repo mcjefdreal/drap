@@ -9,9 +9,12 @@
   import LogOutIcon from '@lucide/svelte/icons/log-out';
   import MailIcon from '@lucide/svelte/icons/mail';
   import UsersIcon from '@lucide/svelte/icons/users';
+  import { mergeProps } from 'bits-ui';
 
   import * as Avatar from '$lib/components/ui/avatar';
+  import * as Drawer from '$lib/components/ui/drawer';
   import * as Sidebar from '$lib/components/ui/sidebar';
+  import BottomNav from '$lib/components/bottom-nav.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
   import Logo from '$lib/assets/logo-DRAP-icon-colored.svg';
   import ModeSwitcher from '$lib/components/mode-switcher.svelte';
@@ -30,277 +33,342 @@
   const { user }: Props = $props();
   const { pathname } = $derived(page.url);
   const sidebar = Sidebar.useSidebar();
+
+  function closeMobileSidebar() {
+    if (sidebar.isMobile) sidebar.setOpenMobile(false);
+  }
 </script>
 
-<TooltipProvider>
-  {#if !sidebar.openMobile}
-    <div class="fixed top-4 left-5 z-100 md:hidden">
-      <Sidebar.Trigger class="bg-background shadow-lg" />
-    </div>
-  {/if}
-  <Sidebar.Root collapsible="icon" class="border-r border-border">
-    <Sidebar.Header>
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2 p-2">
-          <img src={Logo} alt="DRAP Logo" class="size-8" />
-          <span class="text-lg font-semibold">DRAP</span>
-        </div>
-        {#if sidebar.openMobile}
-          <div class="flex items-center gap-2 pr-2 md:hidden">
-            <ModeSwitcher />
-            <Sidebar.Trigger />
-          </div>
-        {/if}
-        <div class="hidden md:block">
+{#snippet sidebarSections()}
+  <Sidebar.Header>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2 p-2">
+        <img src={Logo} alt="DRAP Logo" class="size-8" />
+        <span class="text-lg font-semibold">DRAP</span>
+      </div>
+      {#if sidebar.openMobile}
+        <div class="flex items-center gap-2 pr-2 md:hidden">
           <ModeSwitcher />
         </div>
-      </div>
-    </Sidebar.Header>
-    <Sidebar.Content>
-      <!-- About Group -->
-      <Sidebar.Group>
-        <Sidebar.GroupLabel class="uppercase">About</Sidebar.GroupLabel>
-        <Sidebar.GroupContent>
-          <Sidebar.Menu>
-            <Sidebar.MenuItem>
-              <Sidebar.MenuButton isActive={pathname === '/'} tooltipContent="Home">
-                {#snippet child({ props })}
-                  <a href={resolve('/')} {...props}>
-                    <HomeIcon class="size-5" />
-                    <span>Home</span>
-                  </a>
-                {/snippet}
-              </Sidebar.MenuButton>
-            </Sidebar.MenuItem>
-            <Sidebar.MenuItem>
-              <Sidebar.MenuButton
-                isActive={pathname.startsWith('/history/')}
-                tooltipContent="History"
-              >
-                {#snippet child({ props })}
-                  <a href={resolve('/history/')} {...props}>
-                    <ClockIcon class="size-5" />
-                    <span>History</span>
-                  </a>
-                {/snippet}
-              </Sidebar.MenuButton>
-            </Sidebar.MenuItem>
-            <Sidebar.MenuItem>
-              <Sidebar.MenuButton isActive={pathname === '/privacy/'} tooltipContent="Privacy">
-                {#snippet child({ props })}
-                  <a href={resolve('/privacy/')} {...props}>
-                    <LockKeyholeIcon class="size-5" />
-                    <span>Privacy</span>
-                  </a>
-                {/snippet}
-              </Sidebar.MenuButton>
-            </Sidebar.MenuItem>
-          </Sidebar.Menu>
-        </Sidebar.GroupContent>
-      </Sidebar.Group>
-      <!-- Dashboard Group (only if user is logged in) -->
-      {#if typeof user !== 'undefined' && user.googleUserId !== null}
-        <Sidebar.Group>
-          <Sidebar.GroupLabel class="uppercase">Dashboard</Sidebar.GroupLabel>
-          <Sidebar.GroupContent>
-            <Sidebar.Menu>
-              {#if user.isAdmin}
-                <!-- Admin/Faculty: Admin entry -->
-                <Sidebar.MenuItem>
-                  <Sidebar.MenuButton
-                    isActive={pathname === '/dashboard/admin/'}
-                    tooltipContent="Admin"
-                  >
-                    {#snippet child({ props })}
-                      <a href={resolve('/dashboard/admin/')} {...props}>
-                        <Avatar.Root class="size-5">
-                          <Avatar.Image
-                            src={user.avatarUrl}
-                            alt="{user.givenName} {user.familyName}"
-                          />
-                          <Avatar.Fallback class="text-xs"
-                            >{user.givenName[0]}{user.familyName[0]}</Avatar.Fallback
-                          >
-                        </Avatar.Root>
-                        <span>Admin</span>
-                      </a>
-                    {/snippet}
-                  </Sidebar.MenuButton>
-                </Sidebar.MenuItem>
-                {#if user.labId === null}
-                  <!-- Admin (no lab): Admin links -->
-                  <Sidebar.MenuItem>
-                    <Sidebar.MenuButton
-                      isActive={pathname === '/dashboard/labs/'}
-                      tooltipContent="Labs"
-                    >
-                      {#snippet child({ props })}
-                        <a href={resolve('/dashboard/labs/')} {...props}>
-                          <FlaskConicalIcon class="size-5" />
-                          <span>Labs</span>
-                        </a>
-                      {/snippet}
-                    </Sidebar.MenuButton>
-                  </Sidebar.MenuItem>
-                  <Sidebar.MenuItem>
-                    <Sidebar.MenuButton
-                      isActive={pathname === '/dashboard/users/'}
-                      tooltipContent="Users"
-                    >
-                      {#snippet child({ props })}
-                        <a href={resolve('/dashboard/users/')} {...props}>
-                          <UsersIcon class="size-5" />
-                          <span>Users</span>
-                        </a>
-                      {/snippet}
-                    </Sidebar.MenuButton>
-                  </Sidebar.MenuItem>
-                  <Sidebar.MenuItem>
-                    <Sidebar.MenuButton
-                      isActive={pathname.startsWith('/dashboard/drafts/')}
-                      tooltipContent="Drafts"
-                    >
-                      {#snippet child({ props })}
-                        <a href={resolve('/dashboard/drafts/')} {...props}>
-                          <ClipboardListIcon class="size-5" />
-                          <span>Drafts</span>
-                        </a>
-                      {/snippet}
-                    </Sidebar.MenuButton>
-                  </Sidebar.MenuItem>
-                  <Sidebar.MenuItem>
-                    <Sidebar.MenuButton
-                      isActive={pathname === '/dashboard/email/'}
-                      tooltipContent="Email"
-                    >
-                      {#snippet child({ props })}
-                        <a href={resolve('/dashboard/email/')} {...props}>
-                          <MailIcon class="size-5" />
-                          <span>Email</span>
-                        </a>
-                      {/snippet}
-                    </Sidebar.MenuButton>
-                  </Sidebar.MenuItem>
-                {:else}
-                  <!-- Faculty (has lab): Lab + Students links -->
-                  <Sidebar.MenuItem>
-                    <Sidebar.MenuButton
-                      isActive={pathname === '/dashboard/lab/'}
-                      tooltipContent="Lab"
-                    >
-                      {#snippet child({ props })}
-                        <a href={resolve('/dashboard/lab/')} {...props}>
-                          <FlaskConicalIcon class="size-5" />
-                          <span>Lab</span>
-                        </a>
-                      {/snippet}
-                    </Sidebar.MenuButton>
-                  </Sidebar.MenuItem>
-                  <Sidebar.MenuItem>
-                    <Sidebar.MenuButton
-                      isActive={pathname === '/dashboard/students/'}
-                      tooltipContent="Students"
-                    >
-                      {#snippet child({ props })}
-                        <a href={resolve('/dashboard/students/')} {...props}>
-                          <GraduationCapIcon class="size-5" />
-                          <span>Students</span>
-                        </a>
-                      {/snippet}
-                    </Sidebar.MenuButton>
-                  </Sidebar.MenuItem>
-                {/if}
-              {:else}
-                <!-- Student: Student entry -->
-                <Sidebar.MenuItem>
-                  <Sidebar.MenuButton
-                    isActive={pathname === '/dashboard/student/'}
-                    tooltipContent="Student"
-                  >
-                    {#snippet child({ props })}
-                      <a href={resolve('/dashboard/student/')} {...props}>
-                        <GraduationCapIcon class="size-5" />
-                        <span>Student</span>
-                      </a>
-                    {/snippet}
-                  </Sidebar.MenuButton>
-                </Sidebar.MenuItem>
-                {#if user.labId !== null}
-                  <!-- Assigned student: Lab link -->
-                  <Sidebar.MenuItem>
-                    <Sidebar.MenuButton
-                      isActive={pathname === '/dashboard/lab/'}
-                      tooltipContent="Lab"
-                    >
-                      {#snippet child({ props })}
-                        <a href={resolve('/dashboard/lab/')} {...props}>
-                          <FlaskConicalIcon class="size-5" />
-                          <span>Lab</span>
-                        </a>
-                      {/snippet}
-                    </Sidebar.MenuButton>
-                  </Sidebar.MenuItem>
-                {/if}
-              {/if}
-            </Sidebar.Menu>
-          </Sidebar.GroupContent>
-        </Sidebar.Group>
       {/if}
-    </Sidebar.Content>
-    <Sidebar.Footer>
-      {#if typeof user === 'undefined'}
+      <div class="hidden md:block">
+        <ModeSwitcher />
+      </div>
+    </div>
+  </Sidebar.Header>
+  <Sidebar.Content>
+    <!-- About Group -->
+    <Sidebar.Group>
+      <Sidebar.GroupLabel class="uppercase">About</Sidebar.GroupLabel>
+      <Sidebar.GroupContent>
         <Sidebar.Menu>
           <Sidebar.MenuItem>
-            <Sidebar.MenuButton tooltipContent="Login">
+            <Sidebar.MenuButton isActive={pathname === '/'} tooltipContent="Home">
+              {#snippet child({ props })}
+                <a href={resolve('/')} {...mergeProps(props, { onclick: closeMobileSidebar })}>
+                  <HomeIcon class="size-5" />
+                  <span>Home</span>
+                </a>
+              {/snippet}
+            </Sidebar.MenuButton>
+          </Sidebar.MenuItem>
+          <Sidebar.MenuItem>
+            <Sidebar.MenuButton
+              isActive={pathname.startsWith('/history/')}
+              tooltipContent="History"
+            >
               {#snippet child({ props })}
                 <a
-                  {...props}
-                  href={resolve('/dashboard/oauth/login')}
-                  class={buttonVariants({
-                    variant: 'ghost',
-                    class: 'size-full cursor-pointer justify-start rounded-md p-2 text-sm',
-                  })}
+                  href={resolve('/history/')}
+                  {...mergeProps(props, { onclick: closeMobileSidebar })}
                 >
-                  <LogInIcon class="size-4" />
-                  <span>Login</span>
+                  <ClockIcon class="size-5" />
+                  <span>History</span>
+                </a>
+              {/snippet}
+            </Sidebar.MenuButton>
+          </Sidebar.MenuItem>
+          <Sidebar.MenuItem>
+            <Sidebar.MenuButton
+              isActive={pathname.startsWith('/privacy/')}
+              tooltipContent="Privacy"
+            >
+              {#snippet child({ props })}
+                <a
+                  href={resolve('/privacy/')}
+                  {...mergeProps(props, { onclick: closeMobileSidebar })}
+                >
+                  <LockKeyholeIcon class="size-5" />
+                  <span>Privacy</span>
                 </a>
               {/snippet}
             </Sidebar.MenuButton>
           </Sidebar.MenuItem>
         </Sidebar.Menu>
-      {:else}
-        <Sidebar.Menu>
-          <Sidebar.MenuItem>
-            <Sidebar.MenuButton tooltipContent="Logout">
-              {#snippet child({ props })}
-                <form
-                  method="post"
-                  action="/dashboard/oauth/?/logout"
-                  use:enhance={({ submitter }) => {
-                    assert(submitter !== null);
-                    assert(submitter instanceof HTMLButtonElement);
-                    submitter.disabled = true;
-                    return async ({ update }) => {
-                      submitter.disabled = false;
-                      await update();
-                    };
-                  }}
+      </Sidebar.GroupContent>
+    </Sidebar.Group>
+    <!-- Dashboard Group (only if user is logged in) -->
+    {#if typeof user !== 'undefined' && user.googleUserId !== null}
+      <Sidebar.Group>
+        <Sidebar.GroupLabel class="uppercase">Dashboard</Sidebar.GroupLabel>
+        <Sidebar.GroupContent>
+          <Sidebar.Menu>
+            {#if user.isAdmin}
+              <!-- Admin/Faculty: Admin entry -->
+              <Sidebar.MenuItem>
+                <Sidebar.MenuButton
+                  isActive={pathname.startsWith('/dashboard/admin/')}
+                  tooltipContent="Admin"
                 >
-                  <Button
-                    {...props}
-                    type="submit"
-                    variant="ghost"
-                    class="size-full cursor-pointer justify-start rounded-md p-2 text-sm"
+                  {#snippet child({ props })}
+                    <a
+                      href={resolve('/dashboard/admin/')}
+                      {...mergeProps(props, { onclick: closeMobileSidebar })}
+                    >
+                      <Avatar.Root class="size-5">
+                        <Avatar.Image
+                          src={user.avatarUrl}
+                          alt="{user.givenName} {user.familyName}"
+                        />
+                        <Avatar.Fallback class="text-xs"
+                          >{user.givenName[0]}{user.familyName[0]}</Avatar.Fallback
+                        >
+                      </Avatar.Root>
+                      <span>Admin</span>
+                    </a>
+                  {/snippet}
+                </Sidebar.MenuButton>
+              </Sidebar.MenuItem>
+              {#if user.labId === null}
+                <!-- Admin (no lab): Admin links -->
+                <Sidebar.MenuItem>
+                  <Sidebar.MenuButton
+                    isActive={pathname.startsWith('/dashboard/labs/')}
+                    tooltipContent="Labs"
                   >
-                    <LogOutIcon class="size-4" />
-                    <span>Logout</span>
-                  </Button>
-                </form>
-              {/snippet}
-            </Sidebar.MenuButton>
-          </Sidebar.MenuItem>
-        </Sidebar.Menu>
-      {/if}
-    </Sidebar.Footer>
-  </Sidebar.Root>
+                    {#snippet child({ props })}
+                      <a
+                        href={resolve('/dashboard/labs/')}
+                        {...mergeProps(props, { onclick: closeMobileSidebar })}
+                      >
+                        <FlaskConicalIcon class="size-5" />
+                        <span>Labs</span>
+                      </a>
+                    {/snippet}
+                  </Sidebar.MenuButton>
+                </Sidebar.MenuItem>
+                <Sidebar.MenuItem>
+                  <Sidebar.MenuButton
+                    isActive={pathname.startsWith('/dashboard/users/')}
+                    tooltipContent="Users"
+                  >
+                    {#snippet child({ props })}
+                      <a
+                        href={resolve('/dashboard/users/')}
+                        {...mergeProps(props, { onclick: closeMobileSidebar })}
+                      >
+                        <UsersIcon class="size-5" />
+                        <span>Users</span>
+                      </a>
+                    {/snippet}
+                  </Sidebar.MenuButton>
+                </Sidebar.MenuItem>
+                <Sidebar.MenuItem>
+                  <Sidebar.MenuButton
+                    isActive={pathname.startsWith('/dashboard/drafts/')}
+                    tooltipContent="Drafts"
+                  >
+                    {#snippet child({ props })}
+                      <a
+                        href={resolve('/dashboard/drafts/')}
+                        {...mergeProps(props, { onclick: closeMobileSidebar })}
+                      >
+                        <ClipboardListIcon class="size-5" />
+                        <span>Drafts</span>
+                      </a>
+                    {/snippet}
+                  </Sidebar.MenuButton>
+                </Sidebar.MenuItem>
+                <Sidebar.MenuItem>
+                  <Sidebar.MenuButton
+                    isActive={pathname.startsWith('/dashboard/email/')}
+                    tooltipContent="Email"
+                  >
+                    {#snippet child({ props })}
+                      <a
+                        href={resolve('/dashboard/email/')}
+                        {...mergeProps(props, { onclick: closeMobileSidebar })}
+                      >
+                        <MailIcon class="size-5" />
+                        <span>Email</span>
+                      </a>
+                    {/snippet}
+                  </Sidebar.MenuButton>
+                </Sidebar.MenuItem>
+              {:else}
+                <!-- Faculty (has lab): Lab + Students links -->
+                <Sidebar.MenuItem>
+                  <Sidebar.MenuButton
+                    isActive={pathname.startsWith('/dashboard/lab/')}
+                    tooltipContent="Lab"
+                  >
+                    {#snippet child({ props })}
+                      <a
+                        href={resolve('/dashboard/lab/')}
+                        {...mergeProps(props, { onclick: closeMobileSidebar })}
+                      >
+                        <FlaskConicalIcon class="size-5" />
+                        <span>Lab</span>
+                      </a>
+                    {/snippet}
+                  </Sidebar.MenuButton>
+                </Sidebar.MenuItem>
+                <Sidebar.MenuItem>
+                  <Sidebar.MenuButton
+                    isActive={pathname.startsWith('/dashboard/students/')}
+                    tooltipContent="Students"
+                  >
+                    {#snippet child({ props })}
+                      <a
+                        href={resolve('/dashboard/students/')}
+                        {...mergeProps(props, { onclick: closeMobileSidebar })}
+                      >
+                        <GraduationCapIcon class="size-5" />
+                        <span>Students</span>
+                      </a>
+                    {/snippet}
+                  </Sidebar.MenuButton>
+                </Sidebar.MenuItem>
+              {/if}
+            {:else}
+              <!-- Student: Student entry -->
+              <Sidebar.MenuItem>
+                <Sidebar.MenuButton
+                  isActive={pathname.startsWith('/dashboard/student/')}
+                  tooltipContent="Student"
+                >
+                  {#snippet child({ props })}
+                    <a
+                      href={resolve('/dashboard/student/')}
+                      {...mergeProps(props, { onclick: closeMobileSidebar })}
+                    >
+                      <GraduationCapIcon class="size-5" />
+                      <span>Student</span>
+                    </a>
+                  {/snippet}
+                </Sidebar.MenuButton>
+              </Sidebar.MenuItem>
+              {#if user.labId !== null}
+                <!-- Assigned student: Lab link -->
+                <Sidebar.MenuItem>
+                  <Sidebar.MenuButton
+                    isActive={pathname.startsWith('/dashboard/lab/')}
+                    tooltipContent="Lab"
+                  >
+                    {#snippet child({ props })}
+                      <a
+                        href={resolve('/dashboard/lab/')}
+                        {...mergeProps(props, { onclick: closeMobileSidebar })}
+                      >
+                        <FlaskConicalIcon class="size-5" />
+                        <span>Lab</span>
+                      </a>
+                    {/snippet}
+                  </Sidebar.MenuButton>
+                </Sidebar.MenuItem>
+              {/if}
+            {/if}
+          </Sidebar.Menu>
+        </Sidebar.GroupContent>
+      </Sidebar.Group>
+    {/if}
+  </Sidebar.Content>
+  <Sidebar.Footer>
+    {#if typeof user === 'undefined'}
+      <Sidebar.Menu>
+        <Sidebar.MenuItem>
+          <Sidebar.MenuButton tooltipContent="Login">
+            {#snippet child({ props })}
+              <a
+                {...mergeProps(props, { onclick: closeMobileSidebar })}
+                href={resolve('/dashboard/oauth/login')}
+                class={buttonVariants({
+                  variant: 'ghost',
+                  class: 'size-full cursor-pointer justify-start rounded-md p-2 text-sm',
+                })}
+              >
+                <LogInIcon class="size-4" />
+                <span>Login</span>
+              </a>
+            {/snippet}
+          </Sidebar.MenuButton>
+        </Sidebar.MenuItem>
+      </Sidebar.Menu>
+    {:else}
+      <Sidebar.Menu>
+        <Sidebar.MenuItem>
+          <Sidebar.MenuButton tooltipContent="Logout">
+            {#snippet child({ props })}
+              <form
+                method="post"
+                action="/dashboard/oauth/?/logout"
+                use:enhance={({ submitter }) => {
+                  assert(submitter !== null);
+                  assert(submitter instanceof HTMLButtonElement);
+                  submitter.disabled = true;
+                  return async ({ update }) => {
+                    submitter.disabled = false;
+                    await update();
+                  };
+                }}
+              >
+                <Button
+                  {...mergeProps(props, { onclick: closeMobileSidebar })}
+                  type="submit"
+                  variant="ghost"
+                  class="size-full cursor-pointer justify-start rounded-md p-2 text-sm"
+                >
+                  <LogOutIcon class="size-4" />
+                  <span>Logout</span>
+                </Button>
+              </form>
+            {/snippet}
+          </Sidebar.MenuButton>
+        </Sidebar.MenuItem>
+      </Sidebar.Menu>
+    {/if}
+  </Sidebar.Footer>
+{/snippet}
+
+<TooltipProvider>
+  {#if !sidebar.openMobile}
+    <div class="fixed bottom-0 z-45 w-full md:hidden">
+      <BottomNav {sidebar} />
+    </div>
+  {/if}
+  {#if sidebar.isMobile}
+    <Drawer.Root
+      bind:open={() => sidebar.openMobile, v => sidebar.setOpenMobile(v)}
+      direction="bottom"
+    >
+      <Drawer.Content
+        data-sidebar="sidebar"
+        data-slot="sidebar"
+        data-mobile="true"
+        class="w-dvw bg-sidebar p-0 text-sidebar-foreground"
+      >
+        <Drawer.Header class="sr-only">
+          <Drawer.Title>Sidebar</Drawer.Title>
+          <Drawer.Description>Displays the mobile sidebar.</Drawer.Description>
+        </Drawer.Header>
+        <div class="flex h-full w-full flex-col">
+          {@render sidebarSections()}
+        </div>
+      </Drawer.Content>
+    </Drawer.Root>
+  {:else}
+    <Sidebar.Root collapsible="icon" class="border-r border-border">
+      {@render sidebarSections()}
+    </Sidebar.Root>
+  {/if}
 </TooltipProvider>
