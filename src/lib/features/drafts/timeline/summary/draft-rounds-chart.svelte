@@ -42,38 +42,21 @@
     y: number;
   } | null>(null);
 
-  // const filteredRecords = $derived(
-  //   selectedLabId === null ? records : records.filter(r => r.labId === selectedLabId),
-  // );
-  // const filteredInterventionRecords = $derived(
-  //   selectedLabId === null
-  //     ? interventionRecords
-  //     : interventionRecords.filter(r => r.labId === selectedLabId),
-  // );
-  // const filteredLotteryRecords = $derived(
-  //   selectedLabId === null ? lotteryRecords : lotteryRecords.filter(r => r.labId === selectedLabId),
-  // );
-  //
-  // const selectedLabQuota = $derived(
-  //   selectedLabId === null ? null : (labs.find(l => l.id === selectedLabId)?.quota ?? null),
-  // );
-
   const chartFilter = $derived.by(() => {
-    if (selectedLabId == null) {
+    if (selectedLabId === null)
       return {
         filteredRecords: records,
         filteredInterventionRecords: interventionRecords,
         filteredLotteryRecords: lotteryRecords,
         selectedLabQuota: null,
       };
-    } else {
-      return {
-        filteredRecords: records.filter(r => r.labId == selectedLabId),
-        filteredInterventionRecords: interventionRecords.filter(r => r.labId === selectedLabId),
-        filteredLotteryRecords: lotteryRecords.filter(r => r.labId === selectedLabId),
-        selectedLabQuota: labs.find(r => r.id === selectedLabId)?.quota ?? null,
-      };
-    }
+
+    return {
+      filteredRecords: records.filter(r => r.labId === selectedLabId),
+      filteredInterventionRecords: interventionRecords.filter(r => r.labId === selectedLabId),
+      filteredLotteryRecords: lotteryRecords.filter(r => r.labId === selectedLabId),
+      selectedLabQuota: labs.find(r => r.id === selectedLabId)?.quota ?? null,
+    };
   });
 
   const chartData = $derived.by(() => {
@@ -117,19 +100,6 @@
       1,
     );
 
-    // const maxY = (() => {
-    //   if (
-    //     chartMode === 'remaining' &&
-    //     selectedLabId !== null &&
-    //     chartFilter.selectedLabQuota !== null
-    //   )
-    //     return Math.max(chartFilter.selectedLabQuota, 1);
-    //
-    //   if (chartMode === 'remaining') return Math.max(totalStudents, 1);
-    //
-    //   return Math.max(maxCount, 1);
-    // })();
-
     let maxY = Math.max(maxCount, 1);
     if (chartMode === 'remaining')
       maxY = Math.max(
@@ -169,27 +139,16 @@
   }
 
   const maxCount = $derived(Math.max(...chartData.map(p => p.count), 1));
-  // const chartMax = $derived.by(() => {
-  //   if (
-  //     chartMode === 'remaining' &&
-  //     selectedLabId !== null &&
-  //     chartFilter.selectedLabQuota !== null
-  //   )
-  //     return Math.max(chartFilter.selectedLabQuota, 1);
-  //
-  //   if (chartMode === 'remaining') return Math.max(totalStudents, 1);
-  //
-  //   return Math.max(maxCount, 1);
-  // });
+
   const chartMax = $derived.by(() => {
-    if (chartMode === 'remaining') {
+    if (chartMode === 'remaining')
       return Math.max(
         selectedLabId !== null && chartFilter.selectedLabQuota
           ? chartFilter.selectedLabQuota
           : totalStudents,
         1,
       );
-    } else return Math.max(maxCount, 1);
+    return Math.max(maxCount, 1);
   });
 
   const linePath = $derived(
