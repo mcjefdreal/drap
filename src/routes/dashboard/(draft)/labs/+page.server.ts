@@ -3,6 +3,7 @@ import { decode } from 'decode-formdata';
 import { error, redirect } from '@sveltejs/kit';
 
 import { db } from '$lib/server/database';
+import { validateBigInt } from '$lib/validators';
 import {
   deleteLab,
   getActiveDraft,
@@ -94,7 +95,11 @@ export const actions = {
         async db => {
           await lockLabCatalogForMutation(db);
           const activeDraft = await getActiveDraft(db);
-          const clientDraftId = draftIdRaw === '' ? null : BigInt(draftIdRaw);
+          const clientDraftId = draftIdRaw === '' ? null : validateBigInt(draftIdRaw);
+          if (clientDraftId === null && draftIdRaw !== '') {
+            logger.fatal('invalid draft id', void 0, { 'draft.raw_id': draftIdRaw });
+            error(400, 'Invalid draft ID.');
+          }
           if (clientDraftId !== null && clientDraftId !== activeDraft?.id) {
             logger.fatal('draft id mismatch', void 0, {
               clientDraftId: clientDraftId?.toString(),
@@ -144,7 +149,11 @@ export const actions = {
         async db => {
           await lockLabCatalogForMutation(db);
           const activeDraft = await getActiveDraft(db);
-          const clientDraftId = draftIdRaw === '' ? null : BigInt(draftIdRaw);
+          const clientDraftId = draftIdRaw === '' ? null : validateBigInt(draftIdRaw);
+          if (clientDraftId === null && draftIdRaw !== '') {
+            logger.fatal('invalid draft id', void 0, { 'draft.raw_id': draftIdRaw });
+            error(400, 'Invalid draft ID.');
+          }
           if (clientDraftId !== null && clientDraftId !== activeDraft?.id) {
             logger.fatal('draft id mismatch', void 0, {
               clientDraftId: clientDraftId?.toString(),
@@ -194,7 +203,11 @@ export const actions = {
         async db => {
           await lockLabCatalogForMutation(db);
           const activeDraft = await getActiveDraft(db);
-          const clientDraftId = draftIdRaw === '' ? null : BigInt(draftIdRaw);
+          const clientDraftId = draftIdRaw === '' ? null : validateBigInt(draftIdRaw);
+          if (clientDraftId === null && draftIdRaw !== '') {
+            logger.fatal('invalid draft id', void 0, { 'draft.raw_id': draftIdRaw });
+            error(400, 'Invalid draft ID.');
+          }
           if (clientDraftId !== null && clientDraftId !== activeDraft?.id) {
             logger.fatal('draft id mismatch', void 0, {
               clientDraftId: clientDraftId?.toString(),
