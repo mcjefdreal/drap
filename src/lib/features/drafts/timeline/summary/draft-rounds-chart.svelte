@@ -24,14 +24,14 @@
   let chartMode = $state<'assigned' | 'remaining'>('assigned');
 
   const PADDING_TOP = 20;
+  const PADDING_LEFT = 40;
   const PADDING_BOTTOM = 30;
+  const PADDING_RIGHT = 20;
   const width = 600;
   const height = 200;
 
-  const chartWidth = width - 40 - 20;
-  //width - pad_left(40) - pad_right(20)
-  const chartHeight = height - 20 - 30;
-  //height - pad_top(40) - pad_bot(20)
+  const chartWidth = width - PADDING_LEFT - PADDING_RIGHT;
+  const chartHeight = height - PADDING_TOP - PADDING_BOTTOM;
 
   let selectedLabId = $state<string>('');
   let hoveredPoint = $state<{
@@ -111,11 +111,11 @@
 
     return points.map((point, index) => ({
       ...point,
-      x: padding.left + (index / Math.max(totalPoints - 1, 1)) * chartWidth,
+      x: PADDING_LEFT + (index / Math.max(totalPoints - 1, 1)) * chartWidth,
       y:
         chartMode === 'assigned'
-          ? padding.top + chartHeight - (point.count / maxCount) * chartHeight
-          : padding.top +
+          ? PADDING_TOP + chartHeight - (point.count / maxCount) * chartHeight
+          : PADDING_TOP +
             chartHeight -
             ((selectedLabId !== '' && chartFilter.selectedLabQuota !== null
               ? Math.max(0, chartFilter.selectedLabQuota - cumulativeUpTo(index, points))
@@ -161,7 +161,7 @@
     const [first] = data;
     const last = data.at(-1);
     if (!first || !last) throw new Error('Expected non-empty chart data');
-    return `${linePath} L ${last.x},${padding.top + chartHeight} L ${first.x},${padding.top + chartHeight} Z`;
+    return `${linePath} L ${last.x},${PADDING_TOP + chartHeight} L ${first.x},${PADDING_TOP + chartHeight} Z`;
   });
 
   const yTicks = $derived.by(() => {
@@ -227,17 +227,17 @@
       </defs>
 
       {#each yTicks as tick (tick)}
-        {@const y = padding.top + chartHeight - (tick / chartMax) * chartHeight}
+        {@const y = PADDING_TOP + chartHeight - (tick / chartMax) * chartHeight}
         <line
-          x1={padding.left}
+          x1={PADDING_LEFT}
           y1={y}
-          x2={width - padding.right}
+          x2={width - PADDING_RIGHT}
           y2={y}
           stroke="var(--border)"
           stroke-dasharray="4"
         />
         <text
-          x={padding.left - 8}
+          x={PADDING_LEFT - 8}
           y={y + 4}
           text-anchor="end"
           class="fill-muted-foreground text-[10px]"
@@ -258,9 +258,10 @@
       />
 
       {#each chartData as point, index (point.label)}
-        {@const remaining = !(selectedLabId === '' || chartFilter.selectedLabQuota === null)
-          ? Math.max(0, chartFilter.selectedLabQuota - cumulativeUpTo(index, chartData))
-          : Math.max(0, totalStudents - cumulativeUpTo(index, chartData))}
+        {@const remaining =
+          selectedLabId !== '' && chartFilter.selectedLabQuota !== null
+            ? Math.max(0, chartFilter.selectedLabQuota - cumulativeUpTo(index, chartData))
+            : Math.max(0, totalStudents - cumulativeUpTo(index, chartData))}
         <g
           role="button"
           tabindex="0"
@@ -281,7 +282,7 @@
 
       {#if hoveredPoint !== null}
         {@const tooltipX = hoveredPoint.x - 5}
-        {@const tooltipY = Math.min(hoveredPoint.y + 25, padding.top + chartHeight - 20)}
+        {@const tooltipY = Math.min(hoveredPoint.y + 25, PADDING_TOP + chartHeight - 20)}
         <rect
           x={tooltipX - 10}
           y={tooltipY - 14}
