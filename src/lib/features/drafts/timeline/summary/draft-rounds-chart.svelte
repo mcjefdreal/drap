@@ -117,7 +117,7 @@
           ? padding.top + chartHeight - (point.count / maxCount) * chartHeight
           : padding.top +
             chartHeight -
-            ((selectedLabId !== null && chartFilter.selectedLabQuota !== null
+            ((selectedLabId !== '' && chartFilter.selectedLabQuota !== ''
               ? Math.max(0, chartFilter.selectedLabQuota - cumulativeUpTo(index, points))
               : Math.max(0, totalStudents - cumulativeUpTo(index, points))) /
               maxY) *
