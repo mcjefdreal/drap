@@ -366,6 +366,10 @@ test.describe('Draft Lifecycle', () => {
         const data = new FormData();
         data.set('labId', 'test');
         data.set('name', 'Test Lab');
+        const draftInput = document.querySelector('input[name="draft"]');
+        if (draftInput instanceof HTMLInputElement && draftInput.value)
+          data.set('draftIdRaw', draftInput.value);
+
         const response = await fetch('/dashboard/labs/?/lab', {
           method: 'POST',
           body: data,
@@ -380,6 +384,10 @@ test.describe('Draft Lifecycle', () => {
       const status = await adminPage.evaluate(async () => {
         const data = new FormData();
         data.set('archive', 'ndsl');
+        const draftInput = document.querySelector('input[name="draft"]');
+        if (draftInput instanceof HTMLInputElement && draftInput.value)
+          data.set('draftIdRaw', draftInput.value);
+
         const response = await fetch('/dashboard/labs/?/archive', {
           method: 'POST',
           body: data,
@@ -394,6 +402,10 @@ test.describe('Draft Lifecycle', () => {
       const status = await adminPage.evaluate(async () => {
         const data = new FormData();
         data.set('restore', 'ndsl');
+        const draftInput = document.querySelector('input[name="draft"]');
+        if (draftInput instanceof HTMLInputElement && draftInput.value)
+          data.set('draftIdRaw', draftInput.value);
+
         const response = await fetch('/dashboard/labs/?/restore', {
           method: 'POST',
           body: data,
