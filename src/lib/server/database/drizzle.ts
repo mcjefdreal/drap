@@ -681,44 +681,6 @@ export async function getDraftByIdForShare(db: DrizzleTransaction, id: bigint) {
   });
 }
 
-export async function getActiveDraftForShare(db: DrizzleTransaction) {
-  return await tracer.asyncSpan('get-active-draft-for-share', async () => {
-    return await db
-      .select({
-        id: schema.draft.id,
-        currRound: schema.draft.currRound,
-        maxRounds: schema.draft.maxRounds,
-        registrationClosesAt: schema.draft.registrationClosesAt,
-        isRegistrationClosed,
-        activePeriodStart: sql`lower(${schema.draft.activePeriod})`.mapWith(coerceDate),
-        activePeriodEnd: sql`upper(${schema.draft.activePeriod})`.mapWith(coerceNullableDate),
-      })
-      .from(schema.draft)
-      .where(sql`upper_inf(${schema.draft.activePeriod})`)
-      .for('share')
-      .then(assertOptional);
-  });
-}
-
-export async function getActiveDraftForUpdate(db: DrizzleTransaction) {
-  return await tracer.asyncSpan('get-active-draft-for-update', async () => {
-    return await db
-      .select({
-        id: schema.draft.id,
-        currRound: schema.draft.currRound,
-        maxRounds: schema.draft.maxRounds,
-        registrationClosesAt: schema.draft.registrationClosesAt,
-        isRegistrationClosed,
-        activePeriodStart: sql`lower(${schema.draft.activePeriod})`.mapWith(coerceDate),
-        activePeriodEnd: sql`upper(${schema.draft.activePeriod})`.mapWith(coerceNullableDate),
-      })
-      .from(schema.draft)
-      .where(sql`upper_inf(${schema.draft.activePeriod})`)
-      .for('update')
-      .then(assertOptional);
-  });
-}
-
 export async function hasActiveDraft(db: DbConnection) {
   return await tracer.asyncSpan('has-active-draft', async () => {
     const result = await db
