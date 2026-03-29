@@ -23,7 +23,6 @@
 
   let chartMode = $state<'assigned' | 'remaining'>('assigned');
 
-  const padding = { top: 20, right: 20, bottom: 30, left: 40 };
   const PADDING_TOP = 20;
   const PADDING_LEFT = 40;
   const PADDING_BOTTOM = 30;
