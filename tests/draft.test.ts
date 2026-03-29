@@ -62,6 +62,47 @@ async function expectVisibleButtons(page: Page, labels: string[]) {
     await expect(page.getByRole('button', { name: label }).first()).toBeVisible();
 }
 
+async function expectDrawerContents(
+  page: Page,
+  triggerName: string,
+  expectedVisible: (string | RegExp)[],
+  expectedHidden: (string | RegExp)[] = [],
+) {
+  await page.getByRole('button', { name: triggerName }).first().click();
+
+  const drawer = page.locator('[data-slot="drawer-content"]').last();
+  await expect(drawer).toBeVisible();
+
+  for (const value of expectedVisible) await expect(drawer).toContainText(value);
+  for (const value of expectedHidden) await expect(drawer).not.toContainText(value);
+
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+}
+
+async function expectChartTooltipPoint(
+  page: Page,
+  pointIndex: number,
+  expected: {
+    label: string;
+    metric: string;
+    value: number;
+    hiddenMetrics?: string[];
+  },
+) {
+  const chart = page.locator('#draft-rounds-chart');
+  const tooltip = page.locator('.draft-rounds-chart-tooltip');
+
+  await chart.locator('.draft-rounds-chart-point').nth(pointIndex).hover({ force: true });
+
+  await expect(tooltip).toContainText(expected.label);
+  await expect(tooltip.locator('.text-muted-foreground')).toHaveText(expected.metric);
+  await expect(tooltip.locator('.font-mono')).toHaveText(String(expected.value));
+
+  for (const metric of expected.hiddenMetrics ?? [])
+    await expect(tooltip).not.toContainText(metric);
+}
+
 test.describe('Draft Lifecycle', () => {
   test.describe.configure({ mode: 'serial' });
 
@@ -704,6 +745,9 @@ test.describe('Draft Lifecycle', () => {
       test('selects Eager', async ({ ndslHeadPage }) => {
         await ndslHeadPage.goto('/dashboard/students/');
         await ndslHeadPage.getByRole('button', { name: /Eager/u }).click();
+        await expect(ndslHeadPage.locator('li[data-selected="true"]')).toHaveCount(1);
+        await expect(ndslHeadPage.locator('li[data-selected="true"]')).toContainText(/Eager/u);
+        await expect(ndslHeadPage.locator('#selection-progress')).toHaveText(/1 \/ 2 slots/u);
         ndslHeadPage.on('dialog', dialog => dialog.accept());
         const responsePromise = ndslHeadPage.waitForResponse('/dashboard/students/?/rankings');
         await ndslHeadPage.getByRole('button', { name: 'Submit' }).click();
@@ -720,6 +764,7 @@ test.describe('Draft Lifecycle', () => {
       test('after submission: reflects 1 drafted', async ({ ndslHeadPage }) => {
         await ndslHeadPage.goto('/dashboard/students/');
         await expectStatCards(ndslHeadPage, { quota: 2, remaining: 1, drafted: 1 });
+        await expect(ndslHeadPage.locator('#selection-progress')).toHaveCount(0);
       });
     });
 
@@ -832,6 +877,18 @@ test.describe('Draft Lifecycle', () => {
     test('draft is now in Round 2', async ({ adminPage }) => {
       await adminPage.goto('/dashboard/drafts/1/');
       await expect(adminPage.getByText(/Round 2/u)).toBeVisible();
+      await expectDrawerContents(
+        adminPage,
+        'Already Drafted',
+        [/202012345/u, /202012346/u],
+        [/202012349/u, /202012348/u],
+      );
+      await expectDrawerContents(
+        adminPage,
+        'Pending Selection',
+        [/202012349/u, /202012348/u, /202012350/u],
+        [/202012345/u, /202012346/u],
+      );
     });
   });
 
@@ -893,6 +950,7 @@ test.describe('Draft Lifecycle', () => {
       test('before submission: Previous Picks Round 1 with Patient', async ({ cslHeadPage }) => {
         await cslHeadPage.goto('/dashboard/students/');
         await expectStatCards(cslHeadPage, { quota: 2, remaining: 1, drafted: 1 });
+        await expect(cslHeadPage.locator('#selection-progress')).toContainText('0 / 1 slots');
         await expectPreviousPicksTab(cslHeadPage, 1, [
           /Candidate, Patient/u,
           /202012346/u,
@@ -904,6 +962,9 @@ test.describe('Draft Lifecycle', () => {
         await cslHeadPage.goto('/dashboard/students/');
         await expect(cslHeadPage.getByRole('button', { name: /Partial/u })).toBeVisible();
         await cslHeadPage.getByRole('button', { name: /Partial/u }).click();
+        await expect(cslHeadPage.locator('li[data-selected="true"]')).toHaveCount(1);
+        await expect(cslHeadPage.locator('li[data-selected="true"]')).toContainText(/Partial/u);
+        await expect(cslHeadPage.locator('#selection-progress')).toHaveText(/1 \/ 1 slots/u);
         cslHeadPage.on('dialog', dialog => dialog.accept());
         const responsePromise = cslHeadPage.waitForResponse('/dashboard/students/?/rankings');
         await cslHeadPage.getByRole('button', { name: 'Submit' }).click();
@@ -949,6 +1010,12 @@ test.describe('Draft Lifecycle', () => {
     test('draft is now in Round 3', async ({ adminPage }) => {
       await adminPage.goto('/dashboard/drafts/1/');
       await expect(adminPage.getByText(/Round 3/u)).toBeVisible();
+      await expectDrawerContents(
+        adminPage,
+        'Already Drafted',
+        [/202012345/u, /202012346/u, /202012349/u],
+        [/202012348/u, /202012350/u],
+      );
     });
   });
 
@@ -961,6 +1028,7 @@ test.describe('Draft Lifecycle', () => {
       test('before submission: Previous Picks Round 1 with Eager', async ({ ndslHeadPage }) => {
         await ndslHeadPage.goto('/dashboard/students/');
         await expectStatCards(ndslHeadPage, { quota: 2, remaining: 1, drafted: 1 });
+        await expect(ndslHeadPage.locator('#selection-progress')).toContainText('0 / 1 slots');
         await expectPreviousPicksTab(ndslHeadPage, 1, [
           /Draftee, Eager/u,
           /202012345/u,
@@ -972,6 +1040,9 @@ test.describe('Draft Lifecycle', () => {
         await ndslHeadPage.goto('/dashboard/students/');
         await expect(ndslHeadPage.getByRole('button', { name: /Unlucky/u })).toBeVisible();
         await ndslHeadPage.getByRole('button', { name: /Unlucky/u }).click();
+        await expect(ndslHeadPage.locator('li[data-selected="true"]')).toHaveCount(1);
+        await expect(ndslHeadPage.locator('li[data-selected="true"]')).toContainText(/Unlucky/u);
+        await expect(ndslHeadPage.locator('#selection-progress')).toHaveText(/1 \/ 1 slots/u);
         ndslHeadPage.on('dialog', dialog => dialog.accept());
         const responsePromise = ndslHeadPage.waitForResponse('/dashboard/students/?/rankings');
         await ndslHeadPage.getByRole('button', { name: 'Submit' }).click();
@@ -1126,6 +1197,12 @@ test.describe('Draft Lifecycle', () => {
     test('draft enters lottery phase', async ({ adminPage }) => {
       await adminPage.goto('/dashboard/drafts/1/');
       await expect(adminPage.getByRole('heading', { name: 'Lottery Phase' })).toBeVisible();
+      await expectDrawerContents(
+        adminPage,
+        'Already Drafted',
+        [/202012345/u, /202012346/u, /202012349/u, /202012348/u],
+        [/202012350/u, /202012351/u],
+      );
     });
   });
 
@@ -1311,6 +1388,127 @@ test.describe('Draft Lifecycle', () => {
       await expect(adminPage.locator('#stat-participating-labs')).toHaveText('5');
       await expect(adminPage.locator('#quota-interventions')).toHaveText('1');
       await expect(adminPage.locator('#stat-lottery-assignments')).toHaveText('3');
+    });
+
+    test.describe('Draft Rounds Chart', () => {
+      test('renders the chart with every finalized phase label', async ({ adminPage }) => {
+        await adminPage.goto('/dashboard/drafts/1/');
+
+        const chart = adminPage.locator('#draft-rounds-chart');
+
+        await expect(chart).toBeVisible();
+        await expect(chart).toContainText('R1');
+        await expect(chart).toContainText('R2');
+        await expect(chart).toContainText('R3');
+        await expect(chart).toContainText('Interventions');
+        await expect(chart).toContainText('Lottery');
+      });
+
+      test('updates the chart title and tooltip for the selected metric', async ({ adminPage }) => {
+        await adminPage.goto('/dashboard/drafts/1/');
+
+        const title = adminPage.locator('#draft-rounds-chart-title');
+        const modeSelect = adminPage.locator('#draft-rounds-chart-mode');
+
+        await expect(title).toHaveText('Students assigned per phase');
+        await expectChartTooltipPoint(adminPage, 0, {
+          label: 'R1',
+          metric: 'Assigned',
+          value: 2,
+          hiddenMetrics: ['Not yet assigned', 'Remaining quota'],
+        });
+        await expectChartTooltipPoint(adminPage, 1, {
+          label: 'R2',
+          metric: 'Assigned',
+          value: 1,
+          hiddenMetrics: ['Not yet assigned', 'Remaining quota'],
+        });
+        await expectChartTooltipPoint(adminPage, 2, {
+          label: 'R3',
+          metric: 'Assigned',
+          value: 1,
+          hiddenMetrics: ['Not yet assigned', 'Remaining quota'],
+        });
+        await expectChartTooltipPoint(adminPage, 3, {
+          label: 'Interventions',
+          metric: 'Assigned',
+          value: 1,
+          hiddenMetrics: ['Not yet assigned', 'Remaining quota'],
+        });
+        await expectChartTooltipPoint(adminPage, 4, {
+          label: 'Lottery',
+          metric: 'Assigned',
+          value: 3,
+          hiddenMetrics: ['Not yet assigned', 'Remaining quota'],
+        });
+
+        await modeSelect.selectOption('remaining');
+
+        await expect(title).toHaveText('Students not yet assigned per phase');
+        await expectChartTooltipPoint(adminPage, 0, {
+          label: 'R1',
+          metric: 'Not yet assigned',
+          value: 6,
+          hiddenMetrics: ['Assigned', 'Remaining quota'],
+        });
+        await expectChartTooltipPoint(adminPage, 1, {
+          label: 'R2',
+          metric: 'Not yet assigned',
+          value: 5,
+          hiddenMetrics: ['Assigned', 'Remaining quota'],
+        });
+        await expectChartTooltipPoint(adminPage, 2, {
+          label: 'R3',
+          metric: 'Not yet assigned',
+          value: 4,
+          hiddenMetrics: ['Assigned', 'Remaining quota'],
+        });
+        await expectChartTooltipPoint(adminPage, 3, {
+          label: 'Interventions',
+          metric: 'Not yet assigned',
+          value: 3,
+          hiddenMetrics: ['Assigned', 'Remaining quota'],
+        });
+        await expectChartTooltipPoint(adminPage, 4, {
+          label: 'Lottery',
+          metric: 'Not yet assigned',
+          value: 0,
+          hiddenMetrics: ['Assigned', 'Remaining quota'],
+        });
+      });
+
+      test('keeps every phase label visible when filtering to a specific lab', async ({
+        adminPage,
+      }) => {
+        await adminPage.goto('/dashboard/drafts/1/');
+
+        const chart = adminPage.locator('#draft-rounds-chart');
+        const title = adminPage.locator('#draft-rounds-chart-title');
+        const modeSelect = adminPage.locator('#draft-rounds-chart-mode');
+        const labSelect = adminPage.locator('#draft-rounds-chart-lab');
+        const selectedLab = await labSelect
+          .locator('option')
+          .nth(1)
+          .evaluate(node => ({
+            label: node.textContent?.trim() ?? '',
+            value: node.getAttribute('value') ?? '',
+          }));
+
+        await labSelect.selectOption(selectedLab.value);
+
+        await expect(adminPage.locator('#draft-rounds-chart-lab-badge')).toHaveText(
+          selectedLab.label,
+        );
+        await expect(chart).toContainText('R1');
+        await expect(chart).toContainText('R2');
+        await expect(chart).toContainText('R3');
+        await expect(chart).toContainText('Interventions');
+        await expect(chart).toContainText('Lottery');
+
+        await modeSelect.selectOption('remaining');
+
+        await expect(title).toHaveText('Labs remaining quota per phase');
+      });
     });
 
     test.describe('drafted sections', () => {
