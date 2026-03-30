@@ -601,6 +601,28 @@ test.describe('Draft Lifecycle', () => {
       await expectVisibleButtons(adminPage, ['See Registered Students']);
     });
 
+    test('registered draftees do not fetch before the drawer opens', async ({ adminPage }) => {
+      const noResponseBeforeOpen = adminPage.waitForResponse(
+        response => new URL(response.url()).pathname === '/dashboard/drafts/1/draftees',
+        { timeout: 1000 },
+      );
+
+      await adminPage.goto('/dashboard/drafts/1/');
+      await expectVisibleButtons(adminPage, ['See Registered Students']);
+      await adminPage.waitForLoadState('networkidle');
+      await expect(noResponseBeforeOpen).rejects.toThrow();
+    });
+
+    test('registered draftees fetch when the drawer opens', async ({ adminPage }) => {
+      await adminPage.goto('/dashboard/drafts/1/');
+      await expectVisibleButtons(adminPage, ['See Registered Students']);
+      const responsePromise = adminPage.waitForResponse(
+        response => new URL(response.url()).pathname === '/dashboard/drafts/1/draftees',
+      );
+      await adminPage.getByRole('button', { name: 'See Registered Students' }).click();
+      await responsePromise;
+    });
+
     test('shows initial snapshot quotas as placeholders', async ({ adminPage }) => {
       await adminPage.goto('/dashboard/drafts/1/');
       const editor = adminPage.locator('#draft-quota-editor-initial');
@@ -705,6 +727,49 @@ test.describe('Draft Lifecycle', () => {
 
       await adminPage.getByRole('tab', { name: 'Laboratories' }).click();
       await expectVisibleButtons(adminPage, ['See Members', 'See Preferred', 'See Interested']);
+    });
+
+    test('pending selection does not fetch before the drawer opens', async ({ adminPage }) => {
+      const noResponseBeforeOpen = adminPage.waitForResponse(
+        response => new URL(response.url()).pathname === '/dashboard/drafts/1/draftees',
+        { timeout: 1000 },
+      );
+
+      await adminPage.goto('/dashboard/drafts/1/');
+      await expectVisibleButtons(adminPage, ['Pending Selection']);
+      await adminPage.waitForLoadState('networkidle');
+      await expect(noResponseBeforeOpen).rejects.toThrow();
+    });
+
+    test('pending selection fetches when the drawer opens', async ({ adminPage }) => {
+      await adminPage.goto('/dashboard/drafts/1/');
+      await expectVisibleButtons(adminPage, ['Pending Selection']);
+      const firstResponsePromise = adminPage.waitForResponse(
+        response => new URL(response.url()).pathname === '/dashboard/drafts/1/draftees',
+      );
+      await adminPage.getByRole('button', { name: 'Pending Selection' }).click();
+      await firstResponsePromise;
+    });
+
+    test('pending selection does not refetch when the drawer reopens', async ({ adminPage }) => {
+      await adminPage.goto('/dashboard/drafts/1/');
+      await expectVisibleButtons(adminPage, ['Pending Selection']);
+
+      const firstResponsePromise = adminPage.waitForResponse(
+        response => new URL(response.url()).pathname === '/dashboard/drafts/1/draftees',
+      );
+      await adminPage.getByRole('button', { name: 'Pending Selection' }).click();
+      await firstResponsePromise;
+
+      await adminPage.keyboard.press('Escape');
+      await adminPage.waitForLoadState('networkidle');
+
+      const noResponseOnReopen = adminPage.waitForResponse(
+        response => new URL(response.url()).pathname === '/dashboard/drafts/1/draftees',
+        { timeout: 1000 },
+      );
+      await adminPage.getByRole('button', { name: 'Pending Selection' }).click();
+      await expect(noResponseOnReopen).rejects.toThrow();
     });
 
     test.describe('NDSL', () => {
@@ -1300,6 +1365,28 @@ test.describe('Draft Lifecycle', () => {
     test('draft enters lottery phase', async ({ adminPage }) => {
       await adminPage.goto('/dashboard/drafts/1/');
       await expect(adminPage.getByRole('heading', { name: 'Lottery Phase' })).toBeVisible();
+    });
+
+    test('eligible for lottery does not fetch before the drawer opens', async ({ adminPage }) => {
+      const noResponseBeforeOpen = adminPage.waitForResponse(
+        response => new URL(response.url()).pathname === '/dashboard/drafts/1/draftees',
+        { timeout: 1000 },
+      );
+
+      await adminPage.goto('/dashboard/drafts/1/');
+      await expectVisibleButtons(adminPage, ['Eligible for Lottery']);
+      await adminPage.waitForLoadState('networkidle');
+      await expect(noResponseBeforeOpen).rejects.toThrow();
+    });
+
+    test('eligible for lottery fetches when the drawer opens', async ({ adminPage }) => {
+      await adminPage.goto('/dashboard/drafts/1/');
+      await expectVisibleButtons(adminPage, ['Eligible for Lottery']);
+      const responsePromise = adminPage.waitForResponse(
+        response => new URL(response.url()).pathname === '/dashboard/drafts/1/draftees',
+      );
+      await adminPage.getByRole('button', { name: 'Eligible for Lottery' }).first().click();
+      await responsePromise;
     });
   });
 
