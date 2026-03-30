@@ -31,24 +31,24 @@
     if (value === 'students' || value === 'labs' || value === 'logs') group = value;
   }}
 >
-  <div class="min-w-0 overflow-auto">
-    <Tabs.List>
+  <div class="flex justify-around items-left sm:justify-normal">
+    <Tabs.List class="w-full">
       <Tabs.Trigger value="students">
         <GraduationCapIcon class="size-5" />
-        <span>Registered Students</span>
+        <span class="hidden sm:inline">Registered Students</span>
       </Tabs.Trigger>
       <Tabs.Trigger value="labs">
         <FlaskConicalIcon class="size-5" />
-        <span>Laboratories</span>
+        <span class="hidden sm:inline">Laboratories</span>
       </Tabs.Trigger>
       <Tabs.Trigger value="logs">
         <PaperclipIcon class="size-5" />
-        <span>System Logs</span>
+        <span class="hidden sm:inline">System Logs</span>
       </Tabs.Trigger>
     </Tabs.List>
   </div>
   <Tabs.Content value="students">
-    <div class="flex items-center justify-around">
+    <div class="flex flex-col sm:flex-row gap-2 items-center justify-around">
       <AvailableDraftees {draftId} variant="pending-selection"
         >No available draftees.</AvailableDraftees
       >
