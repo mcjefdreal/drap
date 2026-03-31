@@ -53,7 +53,6 @@ export interface DraftAssignmentRecord extends Pick<
 export interface DraftFinalizedBreakdown {
   quota: {
     initialQuota: number;
-    lotteryInterventions: number;
     finalizedQuota: number;
   };
   snapshots: DraftLabQuotaSnapshot[];
