@@ -7,10 +7,7 @@
   import LabPreferenceForm from './lab-preference-form.svelte';
 
   interface Props {
-    user: Pick<
-      schema.User,
-      'id' | 'email' | 'givenName' | 'familyName' | 'avatarUrl' | 'studentNumber'
-    >;
+    user: Pick<schema.User, 'id'>;
     draft: Pick<schema.Draft, 'id' | 'maxRounds' | 'registrationClosesAt'>;
     availableLabs: Pick<schema.Lab, 'id' | 'name'>[];
   }
