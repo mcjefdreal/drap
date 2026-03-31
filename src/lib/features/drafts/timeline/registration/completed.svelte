@@ -14,7 +14,7 @@
 <div class="space-y-4">
   <div class="prose dark:prose-invert">
     <p>
-      <strong>{studentCount}</strong> students registered for this draft before registration closed.
+      <strong>{studentCount}</strong> students registered for this draft.
     </p>
   </div>
   <div class="flex items-center justify-center">
