@@ -207,7 +207,6 @@
         {:else}
           <LotteryCompleted
             {draftId}
-            lotteryDrafted={finalized.sections.lotteryDrafted}
             isReview={currentPhase === 'review'}
           />
         {/if}
