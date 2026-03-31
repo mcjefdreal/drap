@@ -35,6 +35,7 @@ export async function GET({ params, locals: { session } }) {
     span.setAttributes({
       'session.id': sessionId,
       'session.user.id': userId,
+      'draft.id': params.draftId,
     });
 
     const draftId = BigInt(params.draftId);
