@@ -2213,3 +2213,62 @@ export async function isRegisteredOrAssignedInDraft(
     return false;
   });
 }
+
+export async function getLateRegistrantsByDraft(db: DbConnection, draftId: bigint) {
+  return await tracer.asyncSpan('get-late-registrants-by-draft', async span => {
+    span.setAttribute('database.draft.id', draftId.toString());
+    return await db
+      .select({
+        id: schema.user.id,
+        email: schema.user.email,
+        givenName: schema.user.givenName,
+        familyName: schema.user.familyName,
+        avatarUrl: schema.user.avatarUrl,
+        studentNumber: schema.user.studentNumber,
+        labs: sql`coalesce(array_agg(${schema.studentRankLab.labId} order by ${schema.studentRankLab.index}) filter (where ${isNotNull(schema.studentRankLab.labId)}), '{}')`
+          .mapWith(value => parse(StringArray, value))
+          .as('labs'),
+        labId: schema.facultyChoiceUser.labId,
+      })
+      .from(schema.studentRank)
+      .innerJoin(schema.user, eq(schema.studentRank.userId, schema.user.id))
+      .innerJoin(schema.draft, eq(schema.studentRank.draftId, schema.draft.id))
+      .leftJoin(
+        schema.facultyChoiceUser,
+        and(
+          eq(schema.studentRank.draftId, schema.facultyChoiceUser.draftId),
+          eq(schema.studentRank.userId, schema.facultyChoiceUser.studentUserId),
+        ),
+      )
+      .leftJoin(
+        schema.studentRankLab,
+        and(
+          eq(schema.studentRank.draftId, schema.studentRankLab.draftId),
+          eq(schema.studentRank.userId, schema.studentRankLab.userId),
+        ),
+      )
+      .where(and(eq(schema.studentRank.draftId, draftId),sql`${schema.studentRank.createdAt} > ${schema.draft.registrationClosesAt}`,))
+      .groupBy(schema.user.id, schema.facultyChoiceUser.labId)
+      .orderBy(schema.user.familyName);
+  });
+}
+
+export async function getLateRegistrantsCountByDraft(db: DbConnection, draftId: bigint) {
+  return await tracer.asyncSpan('get-late-registrants-count-by-draft', async span => {
+    span.setAttribute('database.draft.id', draftId.toString());
+
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(schema.studentRank)
+      .innerJoin(schema.draft, eq(schema.studentRank.draftId, schema.draft.id))
+      .where(
+        and(
+          eq(schema.studentRank.draftId, draftId),
+          sql`${schema.draft.registrationClosesAt} < ${schema.studentRank.createdAt}`,
+        ),
+      )
+      .then(res => res[0]?.count ?? 0);
+
+    return result;
+  });
+}
