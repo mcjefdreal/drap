@@ -15,7 +15,6 @@
     'id' | 'givenName' | 'familyName' | 'email' | 'avatarUrl'
   > {
     labId: string | null;
-    labName: string | null;
   }
 
   interface Props {
