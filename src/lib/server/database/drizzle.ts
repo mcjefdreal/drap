@@ -2262,8 +2262,8 @@ export async function getLateRegistrantsCountByDraft(db: DbConnection, draftId: 
   return await tracer.asyncSpan('get-late-registrants-count-by-draft', async span => {
     span.setAttribute('database.draft.id', draftId.toString());
 
-    const result = await db
-      .select({ count: count(schema.studentRank.userId) })
+    const { result } = await db
+      .select({ result: count(schema.studentRank.userId) })
       .from(schema.studentRank)
       .innerJoin(schema.draft, eq(schema.studentRank.draftId, schema.draft.id))
       .where(
