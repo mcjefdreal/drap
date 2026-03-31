@@ -63,7 +63,6 @@
     const next = { ...labRemarks.current };
     if (value === '') delete next[labId];
     else next[labId] = value;
-
     labRemarks.current = next;
   }
 
@@ -287,7 +286,7 @@
                 placeholder="Hello {id.toUpperCase()}, my name is... I would like to do more research on..."
                 maxlength={1028}
                 bind:value={
-                  () => labRemarks?.current?.[id] ?? '', value => updateLabRemarks(id, value)
+                  () => labRemarks.current?.[id] ?? '', value => updateLabRemarks(id, value)
                 }
               />
             </li>

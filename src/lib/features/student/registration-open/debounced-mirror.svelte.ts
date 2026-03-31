@@ -24,6 +24,15 @@ export class DebouncedMirror<Schema extends v.GenericSchema> {
     this.#debounceMs = debounceMs;
 
     this.#subscribe = createSubscriber(update => {
+      // eslint-disable-next-line no-restricted-globals
+      $effect(() => {
+        this.cancel();
+        const raw = localStorage.getItem(this.key);
+        this.#current = raw === null ? null : v.parse(this.#schema, JSON.parse(raw));
+        update();
+        return this.cancel.bind(this);
+      });
+
       const controller = new AbortController();
       globalThis.addEventListener(
         'storage',
@@ -36,13 +45,8 @@ export class DebouncedMirror<Schema extends v.GenericSchema> {
         },
         { signal: controller.signal },
       );
-      return controller.abort.bind(controller);
-    });
 
-    // eslint-disable-next-line no-restricted-globals
-    $effect(() => {
-      this.load();
-      return this.cancel.bind(this);
+      return controller.abort.bind(controller);
     });
   }
 
@@ -54,11 +58,6 @@ export class DebouncedMirror<Schema extends v.GenericSchema> {
   set current(next: MirrorValue<Schema>) {
     this.#current = next;
     this.scheduleWrite(this.#current);
-  }
-
-  load() {
-    this.cancel();
-    this.#current = this.read();
   }
 
   flush() {
