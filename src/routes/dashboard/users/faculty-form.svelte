@@ -1,5 +1,6 @@
 <script lang="ts">
   import SendIcon from '@lucide/svelte/icons/send';
+  import type { QueryClient } from '@tanstack/svelte-query';
   import { toast } from 'svelte-sonner';
 
   import * as NativeSelect from '$lib/components/ui/native-select';
@@ -13,9 +14,10 @@
   type Lab = Pick<schema.Lab, 'id' | 'name'>;
   interface Props {
     labs: Lab[];
+    queryClient: QueryClient;
   }
 
-  const { labs }: Props = $props();
+  const { labs, queryClient }: Props = $props();
 </script>
 
 <form
@@ -31,6 +33,7 @@
       await update();
       switch (result.type) {
         case 'success':
+          await queryClient.invalidateQueries({ queryKey: ['users', 'invited', 'heads'] });
           toast.success('Successfully invited a new laboratory head.');
           break;
         case 'failure':

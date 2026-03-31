@@ -1,5 +1,6 @@
-<script>
+<script lang="ts">
   import SendIcon from '@lucide/svelte/icons/send';
+  import type { QueryClient } from '@tanstack/svelte-query';
   import { toast } from 'svelte-sonner';
 
   import { assert } from '$lib/assert';
@@ -7,6 +8,12 @@
   import { enhance } from '$app/forms';
   import { Input } from '$lib/components/ui/input';
   import { Label } from '$lib/components/ui/label';
+
+  interface Props {
+    queryClient: QueryClient;
+  }
+
+  const { queryClient }: Props = $props();
 </script>
 
 <form
@@ -22,6 +29,7 @@
       await update();
       switch (result.type) {
         case 'success':
+          await queryClient.invalidateQueries({ queryKey: ['users', 'invited', 'admins'] });
           toast.success('Successfully invited a new draft administrator.');
           break;
         case 'failure':
