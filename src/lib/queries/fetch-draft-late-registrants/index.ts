@@ -1,7 +1,7 @@
 import { createQuery } from '@tanstack/svelte-query';
 
-import type { LateRegistrants } from './schema';
 import { fetchDraftLateRegistrants } from './http';
+import type { LateRegistrants } from './schema';
 
 export function createFetchDraftLateRegistrantsQuery(
   draftId: string,

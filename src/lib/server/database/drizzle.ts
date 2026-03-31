@@ -2191,7 +2191,12 @@ export async function getLateRegistrantsByDraft(db: DbConnection, draftId: bigin
           eq(schema.studentRank.userId, schema.studentRankLab.userId),
         ),
       )
-      .where(and(eq(schema.studentRank.draftId, draftId),sql`${schema.studentRank.createdAt} > ${schema.draft.registrationClosesAt}`,))
+      .where(
+        and(
+          eq(schema.studentRank.draftId, draftId),
+          sql`${schema.studentRank.createdAt} > ${schema.draft.registrationClosesAt}`,
+        ),
+      )
       .groupBy(schema.user.id, schema.facultyChoiceUser.labId)
       .orderBy(schema.user.familyName);
   });

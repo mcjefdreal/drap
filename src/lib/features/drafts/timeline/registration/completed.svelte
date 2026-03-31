@@ -1,6 +1,6 @@
 <script lang="ts">
-  import RegisteredDraftees from '$lib/features/drafts/draftees/registered/index.svelte';
   import LateRegistrants from '$lib/features/drafts/draftees/late-registrants/index.svelte';
+  import RegisteredDraftees from '$lib/features/drafts/draftees/registered/index.svelte';
 
   interface Props {
     draftId: string;

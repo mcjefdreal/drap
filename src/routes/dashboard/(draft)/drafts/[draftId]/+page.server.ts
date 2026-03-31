@@ -99,13 +99,14 @@ export async function load({ params, locals: { session } }) {
       error(404);
     }
 
-    const [studentCount, assignments, quotaSnapshots, allowlistCount, lateRegistrantsCount] = await Promise.all([
-      getStudentCountInDraft(db, draftId),
-      getDraftAssignmentRecords(db, draftId),
-      getDraftLabQuotaSnapshots(db, draftId),
-      getAllowlistCountByDraft(db, draftId),
-      getLateRegistrantsCountByDraft(db, draftId),
-    ]);
+    const [studentCount, assignments, quotaSnapshots, allowlistCount, lateRegistrantsCount] =
+      await Promise.all([
+        getStudentCountInDraft(db, draftId),
+        getDraftAssignmentRecords(db, draftId),
+        getDraftLabQuotaSnapshots(db, draftId),
+        getAllowlistCountByDraft(db, draftId),
+        getLateRegistrantsCountByDraft(db, draftId),
+      ]);
     const labs = quotaSnapshots.map(({ labId, labName, initialQuota }) => ({
       id: labId,
       name: labName,
@@ -161,7 +162,7 @@ export async function load({ params, locals: { session } }) {
         },
       },
       allowlistCount,
-      lateRegistrantsCount
+      lateRegistrantsCount,
     };
   });
 }

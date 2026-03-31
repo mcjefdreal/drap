@@ -26,7 +26,10 @@ export async function GET({ params, locals: { session } }) {
     error(403);
   }
 
-  const { id: sessionId, user: { id: userId } } = session;
+  const {
+    id: sessionId,
+    user: { id: userId },
+  } = session;
 
   return await tracer.asyncSpan('fetch-draft-late-registrants', async span => {
     span.setAttributes({
