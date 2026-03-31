@@ -4,6 +4,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 
 import { db } from '$lib/server/database';
 import {
+  deleteInvitation,
   getFacultyAndStaff,
   getLabRegistry,
   inviteNewFacultyOrStaff,
@@ -18,6 +19,10 @@ const AdminFormData = v.object({
 const FacultyFormData = v.object({
   email: v.pipe(v.string(), v.email()),
   invite: v.pipe(v.string(), v.minLength(1)),
+});
+
+const DeleteInviteFormData = v.object({
+  id: v.string(),
 });
 
 const SERVICE_NAME = 'routes.dashboard.users';
@@ -124,6 +129,39 @@ export const actions = {
 
       logger.fatal('faculty email was already invited before');
       return fail(409);
+    });
+  },
+  async deleteInvite({ locals: { session }, request }) {
+    if (typeof session?.user === 'undefined') {
+      logger.fatal('attempt to delete invite without session');
+      error(401);
+    }
+
+    if (
+      !session.user.isAdmin ||
+      session.user.googleUserId === null ||
+      session.user.labId !== null
+    ) {
+      logger.fatal('insufficient permissions to delete invite', void 0, {
+        'user.is_admin': session.user.isAdmin,
+        'user.google_id': session.user.googleUserId,
+        'user.lab_id': session.user.labId,
+      });
+      error(403);
+    }
+
+    return await tracer.asyncSpan('action.deleteInvite', async () => {
+      const data = await request.formData();
+      const { id } = v.parse(DeleteInviteFormData, decode(data));
+      logger.debug('deleting invite', { id });
+
+      if (await deleteInvitation(db, id)) {
+        logger.info('invite deleted');
+        return;
+      }
+
+      logger.fatal('invite could not be deleted');
+      return fail(404);
     });
   },
 };
