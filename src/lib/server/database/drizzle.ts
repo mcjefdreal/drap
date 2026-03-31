@@ -1164,7 +1164,7 @@ export async function validateStudentsChoseLabInRound(
       'database.student.count': studentUserIds.length,
     });
 
-    if (studentUserIds.length === 0) return new Set<string>();
+    if (studentUserIds.length === 0) return new Set();
 
     const validRows = await db
       .select({ userId: schema.studentRankLab.userId })
