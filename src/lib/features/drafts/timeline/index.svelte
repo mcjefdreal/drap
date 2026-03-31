@@ -31,6 +31,7 @@
     studentCount: number;
     finalized: DraftFinalizedBreakdown;
     allowlistCount: number;
+    lateRegistrantsCount: number;
   }
 
   const {
@@ -40,6 +41,7 @@
     studentCount,
     finalized,
     allowlistCount,
+    lateRegistrantsCount,
   }: Props = $props();
   const draftId = $derived(rawDraftId.toString());
 
@@ -245,7 +247,7 @@
           snapshots={finalized.snapshots}
         />
       {:else}
-        <RegistrationCompleted {draftId} {studentCount} />
+        <RegistrationCompleted {draftId} {studentCount} {lateRegistrantsCount} />
       {/if}
     </Step>
   </div>
