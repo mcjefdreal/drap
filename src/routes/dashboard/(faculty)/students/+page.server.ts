@@ -6,7 +6,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 
 import {
   autoAcknowledgeLabsWithoutPreferences,
-  getActiveDraftForUpdate,
+  getDraftByIdForUpdate,
   getFacultyAndStaff,
   getFacultyChoiceForLabInDraftRound,
   getLabAndRemainingStudentsInDraftWithLabPreference,
@@ -154,8 +154,8 @@ export const actions = {
       try {
         const { submittedRound, roundsToNotify } = await db.transaction(
           async db => {
-            const activeDraft = await getActiveDraftForUpdate(db);
-            if (typeof activeDraft === 'undefined' || activeDraft.id !== draftId) {
+            const activeDraft = await getDraftByIdForUpdate(db, draftId);
+            if (typeof activeDraft === 'undefined' || activeDraft.activePeriodEnd !== null) {
               logger.fatal('attempt to submit rankings for non-active draft', void 0, {
                 'draft.id': draftId.toString(),
               });

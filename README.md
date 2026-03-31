@@ -168,12 +168,12 @@ flowchart TD
     base --> prod --> app
 ```
 
-| Command            | Files                                                     | Services                                                                                     |
-| ------------------ | --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `pnpm docker:dev`  | `compose.yaml` + `compose.dev.yaml`                       | `postgres` (dev), `inngest` (dev), `o2` (dev)                                                |
-| `pnpm docker:ci`   | `compose.yaml` + `compose.dev.yaml` + `compose.ci.yaml`   | dev services with Inngest SDK URL override to `http://host.docker.internal:4173/api/inngest` |
-| `pnpm docker:prod` | `compose.yaml` + `compose.prod.yaml`                      | `postgres` (prod), `inngest` (prod), `redis`, `o2`, `drizzle-gateway`                        |
-| `pnpm docker:app`  | `compose.yaml` + `compose.prod.yaml` + `compose.app.yaml` | prod services + `app` + `migrate`                                                            |
+| Command            | Files                                                     | Services                                                                              |
+| ------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `pnpm docker:dev`  | `compose.yaml` + `compose.dev.yaml`                       | base services plus dev overrides, including `o2`                                      |
+| `pnpm docker:ci`   | `compose.yaml` + `compose.dev.yaml` + `compose.ci.yaml`   | dev-style backing services with CI Inngest SDK URL override, excluding `o2` via reset |
+| `pnpm docker:prod` | `compose.yaml` + `compose.prod.yaml`                      | `postgres` (prod), `inngest` (prod), `redis`, `o2`, `drizzle-gateway`                 |
+| `pnpm docker:app`  | `compose.yaml` + `compose.prod.yaml` + `compose.app.yaml` | prod services + `app` + `migrate`                                                     |
 
 > [!NOTE]
 > Docker BuildKit is required to build the local services used during development. In most platforms, Docker Desktop bundles the core Docker Engine with Docker BuildKit. For others (e.g., Arch Linux), a separate `docker-buildx`-like package must be installed.

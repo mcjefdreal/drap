@@ -6,7 +6,14 @@
   const { data } = $props();
 
   // Make new TanStack query client
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: Infinity,
+        refetchOnMount: false,
+      },
+    },
+  });
 </script>
 
 <QueryClientProvider client={queryClient}>

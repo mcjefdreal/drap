@@ -20,8 +20,8 @@
   }
 
   const { variant, ...props }: Props = $props();
-  type TriggerVariant = typeof variant;
 
+  type TriggerVariant = typeof variant;
   function getTriggerLabel(variant: TriggerVariant) {
     switch (variant) {
       case 'pending-selection':

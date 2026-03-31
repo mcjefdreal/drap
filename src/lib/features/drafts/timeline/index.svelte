@@ -3,12 +3,7 @@
   import { format } from 'date-fns';
 
   import { Button } from '$lib/components/ui/button';
-  import type {
-    Draft,
-    DraftFinalizedBreakdown,
-    FacultyChoiceRecord,
-    Lab,
-  } from '$lib/features/drafts/types';
+  import type { Draft, DraftFinalizedBreakdown, Lab } from '$lib/features/drafts/types';
   import { resolve } from '$app/paths';
 
   import Step, { type Status } from './step.svelte';
@@ -34,7 +29,6 @@
     draft: Draft;
     labs: Lab[];
     studentCount: number;
-    records: FacultyChoiceRecord[];
     finalized: DraftFinalizedBreakdown;
     allowlistCount: number;
   }
@@ -44,7 +38,6 @@
     draft,
     labs,
     studentCount,
-    records,
     finalized,
     allowlistCount,
   }: Props = $props();
@@ -221,9 +214,9 @@
           </span>
         {/snippet}
         {#if draft.currRound !== null && draft.currRound > 0 && draft.currRound <= draft.maxRounds}
-          <RegularPhase {draftId} round={draft.currRound} {labs} {records} />
+          <RegularPhase {draftId} round={draft.currRound} {labs} />
         {:else if currentPhase === 'review' || currentPhase === 'finalized'}
-          <RegularPhase {draftId} round={draft.maxRounds} {labs} {records} />
+          <RegularPhase {draftId} round={draft.maxRounds} {labs} />
         {:else}
           <p class="text-muted-foreground">
             Regular rounds have been completed. {draft.maxRounds} rounds were executed.

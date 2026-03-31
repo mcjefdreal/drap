@@ -44,9 +44,21 @@ Example (draft state machine uses nested conditionals):
 
 ### Dialog Wrapper (`*-dialog.svelte`)
 
-- Wraps a form component to defer mounting until dialog opens
-- Ensures form state only initializes when visible
-- Parent forwards props to child form
+- Wraps a form or query-backed component behind a dialog trigger
+- Prefer relying on the primitive's default presence/lazy-mount behavior
+- Parent forwards props to child content
+
+### Drawer Wrapper (`*/index.svelte` or `*-drawer.svelte`)
+
+- Wraps on-demand content behind a drawer trigger
+- Prefer relying on the drawer/dialog primitive's default presence/lazy-mount behavior
+- Only add local `{#if open}` gating when the primitive does not lazy-mount by default, or when the child has a separate lifecycle requirement
+
+### Tabs / Always-Mounted Content
+
+- `Tabs.Content` stays mounted by default in `bits-ui`
+- Gate query-heavy or state-heavy tab panels explicitly when they should only initialize while active
+- Prefer behavior like `{#if activeTab === '<id>'}` inside the tab content over changing the shared tabs wrapper
 
 ## Dialog Pattern
 
@@ -60,7 +72,7 @@ feature/
 
 ### Dialog Wrapper (`init-dialog.svelte`)
 
-This component manages the open state of the dialog, and also provides closer methods to the form content if `<Dialog.Close>` is insufficient.
+This component manages dialog composition and, when needed, open state for closing behavior. The underlying dialog primitive already lazy-mounts/presence-manages the content, so an extra `{#if open}` wrapper is usually unnecessary unless the child needs the `open` value for some other reason.
 
 ```svelte
 <script lang="ts">
@@ -71,11 +83,9 @@ This component manages the open state of the dialog, and also provides closer me
   // Forward all props the child form needs
   type Props = FormProps;
   const props: Props = $props();
-
-  let open = $state(false);
 </script>
 
-<Dialog.Root bind:open>
+<Dialog.Root>
   <Dialog.Trigger asChild let:builder>
     <Button builders={[builder]}>Create Draft</Button>
   </Dialog.Trigger>
@@ -83,7 +93,7 @@ This component manages the open state of the dialog, and also provides closer me
     <Dialog.Header>
       <Dialog.Title>Create New Draft</Dialog.Title>
     </Dialog.Header>
-    <!-- Only mount form when dialog is open -->
+    <!-- Dialog content is presence-managed by the primitive -->
     <InitForm {...props} />
   </Dialog.Content>
 </Dialog.Root>
@@ -91,7 +101,7 @@ This component manages the open state of the dialog, and also provides closer me
 
 ### Form Content (`init-form.svelte`)
 
-This component manages all form state. It is its own component so that state is only mounted conditionally when the dialog content is opened. This prevents us from mounting unnecessary state in the component tree.
+This component manages all form or query state. It is kept separate so the wrapper can place it behind an on-demand surface. For dialogs and drawers, the primitive usually provides the lazy mount; for tabs, add an explicit gate in the orchestrator when the panel should not initialize while inactive.
 
 ```svelte
 <script lang="ts" module>
@@ -150,6 +160,12 @@ Always use absolute paths with explicit IDs:
   <input type="hidden" name="draft" value={draftId} />
 </form>
 ```
+
+## On-Demand Query Surfaces
+
+- For drawers and dialogs, prefer relying on the primitive's presence/lazy-mount behavior instead of duplicating it with local `{#if open}` wrappers
+- For tabs, explicitly gate query-heavy children because inactive `Tabs.Content` remains mounted
+- Tests should assert request timing and visible behavior, not the presence of a specific local gating pattern
 
 ## Directory Namespacing
 

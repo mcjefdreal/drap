@@ -1,4 +1,5 @@
 services:
+  o2: !reset null
   inngest:
     command:
       - inngest
@@ -6,3 +7,6 @@ services:
       - '--no-discovery'
       - '--sdk-url'
       - 'http://host.docker.internal:4173/api/inngest'
+
+volumes:
+  open-observe: !reset null

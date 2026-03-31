@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { Bug, GitFork, Github, History, Lock } from '@lucide/svelte';
+  import BugIcon from '@lucide/svelte/icons/bug';
+  import GitForkIcon from '@lucide/svelte/icons/git-fork';
+  import GithubIcon from '@icons-pack/svelte-simple-icons/icons/SiGithub';
+  import HistoryIcon from '@lucide/svelte/icons/history';
+  import LockIcon from '@lucide/svelte/icons/lock';
 
   import Logo from '$lib/assets/logo-DRAP-icon-colored.svg';
   import { resolve } from '$app/paths';
@@ -26,14 +30,14 @@
           href={resolve('/history/')}
           class="inline-flex w-fit items-center gap-1 transition duration-150 hover:text-muted-foreground/80 dark:hover:text-secondary"
         >
-          <History size="16" />
+          <HistoryIcon size="16" />
           <span>History</span>
         </a>
         <a
           href={resolve('/privacy/')}
           class="inline-flex w-fit items-center gap-1 transition duration-150 hover:text-muted-foreground/80 dark:hover:text-secondary"
         >
-          <Lock size="16" />
+          <LockIcon size="16" />
           <span>Privacy Policy</span>
         </a>
       </div>
@@ -45,7 +49,7 @@
           rel="noopener noreferrer"
           class="inline-flex w-fit items-center gap-1 transition duration-150 hover:text-muted-foreground/80 dark:hover:text-secondary"
         >
-          <Github size="16" />
+          <GithubIcon size={16} />
           <span>View Source</span>
         </a>
         <a
@@ -54,7 +58,7 @@
           rel="noopener noreferrer"
           class="inline-flex w-fit items-center gap-1 transition duration-150 hover:text-muted-foreground/80 dark:hover:text-secondary"
         >
-          <GitFork size="16" />
+          <GitForkIcon size="16" />
           <span>Fork the Repository</span>
         </a>
         <a
@@ -63,7 +67,7 @@
           rel="noopener noreferrer"
           class="inline-flex w-fit items-center gap-1 transition duration-150 hover:text-muted-foreground/80 dark:hover:text-secondary"
         >
-          <Bug size="16" />
+          <BugIcon size="16" />
           <span>Report a Bug</span>
         </a>
       </div>

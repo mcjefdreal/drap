@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-  import GithubIcon from '@lucide/svelte/icons/github';
+  import GithubIcon from '@icons-pack/svelte-simple-icons/icons/SiGithub';
   import GlobeIcon from '@lucide/svelte/icons/globe';
 
   import * as Avatar from '$lib/components/ui/avatar';

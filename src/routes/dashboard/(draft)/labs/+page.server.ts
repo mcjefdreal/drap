@@ -4,8 +4,9 @@ import { error, redirect } from '@sveltejs/kit';
 
 import { db } from '$lib/server/database';
 import {
+  type DrizzleTransaction,
   deleteLab,
-  getActiveDraftForShare,
+  getActiveDraft,
   getLabRegistry,
   insertNewLab,
   lockLabCatalogForMutation,
@@ -13,18 +14,22 @@ import {
 } from '$lib/server/database/drizzle';
 import { Logger } from '$lib/server/telemetry/logger';
 import { Tracer } from '$lib/server/telemetry/tracer';
+import { validateBigInt } from '$lib/validators';
 
 const LabFormData = v.object({
   labId: v.pipe(v.string(), v.minLength(1)),
   name: v.pipe(v.string(), v.minLength(1)),
+  draftId: v.optional(v.pipe(v.string(), v.minLength(1))),
 });
 
 const ArchiveFormData = v.object({
   archive: v.pipe(v.string(), v.minLength(1)),
+  draftId: v.optional(v.pipe(v.string(), v.minLength(1))),
 });
 
 const RestoreFormData = v.object({
   restore: v.pipe(v.string(), v.minLength(1)),
+  draftId: v.optional(v.pipe(v.string(), v.minLength(1))),
 });
 
 const SERVICE_NAME = 'routes.dashboard.admin.labs';
@@ -83,17 +88,13 @@ export const actions = {
 
     return await tracer.asyncSpan('action.lab', async () => {
       const data = await request.formData();
-      const { labId, name } = v.parse(LabFormData, decode(data));
+      const { labId, name, draftId } = v.parse(LabFormData, decode(data));
       logger.debug('creating lab', { labId, name });
 
       await db.transaction(
         async db => {
           await lockLabCatalogForMutation(db);
-          const draft = await getActiveDraftForShare(db);
-          if (typeof draft !== 'undefined' && draft.currRound === 0) {
-            logger.fatal('cannot mutate lab catalog during registration');
-            error(403, 'Cannot modify labs while draft registration is ongoing.');
-          }
+          await assertDraftExpectation(db, draftId);
           await insertNewLab(db, labId, name);
         },
         { isolationLevel: 'read committed' },
@@ -119,17 +120,13 @@ export const actions = {
 
     return await tracer.asyncSpan('action.archive', async () => {
       const data = await request.formData();
-      const { archive: labId } = v.parse(ArchiveFormData, decode(data));
+      const { archive: labId, draftId } = v.parse(ArchiveFormData, decode(data));
       logger.debug('archiving lab', { labId });
 
       await db.transaction(
         async db => {
           await lockLabCatalogForMutation(db);
-          const draft = await getActiveDraftForShare(db);
-          if (typeof draft !== 'undefined' && draft.currRound === 0) {
-            logger.fatal('cannot mutate lab catalog during registration');
-            error(403, 'Cannot modify labs while draft registration is ongoing.');
-          }
+          await assertDraftExpectation(db, draftId);
           await deleteLab(db, labId);
         },
         { isolationLevel: 'read committed' },
@@ -155,17 +152,13 @@ export const actions = {
 
     return await tracer.asyncSpan('action.restore', async () => {
       const data = await request.formData();
-      const { restore: labId } = v.parse(RestoreFormData, decode(data));
+      const { restore: labId, draftId } = v.parse(RestoreFormData, decode(data));
       logger.debug('restoring lab', { labId });
 
       await db.transaction(
         async db => {
           await lockLabCatalogForMutation(db);
-          const draft = await getActiveDraftForShare(db);
-          if (typeof draft !== 'undefined' && draft.currRound === 0) {
-            logger.fatal('cannot mutate lab catalog during registration');
-            error(403, 'Cannot modify labs while draft registration is ongoing.');
-          }
+          await assertDraftExpectation(db, draftId);
           await restoreLab(db, labId);
         },
         { isolationLevel: 'read committed' },
@@ -174,3 +167,53 @@ export const actions = {
     });
   },
 };
+
+async function assertDraftExpectation(db: DrizzleTransaction, draftId?: string) {
+  return await tracer.asyncSpan('assert-draft-expectation', async span => {
+    const activeDraft = await getActiveDraft(db);
+    if (typeof draftId === 'undefined') {
+      if (typeof activeDraft === 'undefined') {
+        logger.debug('successfully asserted empty draft expectation');
+        return;
+      }
+      logger.fatal('missing draft id while active draft exists', void 0, {
+        'draft.id.client': draftId,
+        'draft.id.active': activeDraft.id.toString(),
+      });
+      error(403, 'Invalid draft.');
+    }
+
+    span.setAttribute('draft.id.client', draftId);
+
+    const clientDraftId = validateBigInt(draftId);
+    if (clientDraftId === null) {
+      logger.fatal('invalid draft id');
+      error(400, 'Invalid draft ID.');
+    }
+
+    if (typeof activeDraft === 'undefined') {
+      logger.fatal('draft id provided while no active draft exists', void 0, {
+        'draft.id.client': clientDraftId.toString(),
+      });
+      error(403, 'Invalid draft.');
+    }
+
+    if (clientDraftId !== activeDraft.id) {
+      logger.fatal('draft id does not match active draft', void 0, {
+        'draft.id.active': activeDraft.id.toString(),
+      });
+      error(403, 'Invalid draft.');
+    }
+
+    if (activeDraft.currRound === 0) {
+      logger.fatal('cannot mutate lab catalog during registration', void 0, {
+        'draft.id.active': activeDraft.id.toString(),
+      });
+      error(403, 'Cannot modify labs while draft registration is ongoing.');
+    }
+
+    logger.debug('successfully asserted active draft expectation', {
+      'draft.round.active': activeDraft.currRound,
+    });
+  });
+}
