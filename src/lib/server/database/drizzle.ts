@@ -1145,6 +1145,42 @@ export async function getLabSelectedStudentCountInDraftRound(
   });
 }
 
+/**
+ * Validates that all submitted students chose the specified lab for the given round.
+ * Returns a Set of valid student user IDs that match the criteria.
+ */
+export async function validateStudentsChoseLabInRound(
+  db: DrizzleTransaction,
+  draftId: bigint,
+  labId: string,
+  round: number,
+  studentUserIds: string[],
+) {
+  return await tracer.asyncSpan('validate-students-chose-lab-in-round', async span => {
+    span.setAttribute('database.draft.id', draftId.toString());
+    span.setAttribute('database.lab.id', labId);
+    span.setAttribute('database.round', round);
+    span.setAttribute('database.student.count', studentUserIds.length);
+
+    if (studentUserIds.length === 0) return new Set<string>();
+
+    const validRows = await db
+      .select({ userId: schema.studentRankLab.userId })
+      .from(schema.studentRankLab)
+      .where(
+        and(
+          eq(schema.studentRankLab.draftId, draftId),
+          eq(schema.studentRankLab.labId, labId),
+          eq(schema.studentRankLab.index, BigInt(round)),
+          inArray(schema.studentRankLab.userId, studentUserIds),
+        ),
+      )
+      .for('update');
+
+    return new Set(validRows.map(row => row.userId));
+  });
+}
+
 export async function initDraft(
   db: DrizzleTransaction,
   maxRounds: number,

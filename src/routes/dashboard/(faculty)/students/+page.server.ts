@@ -18,6 +18,7 @@ import {
   getValidStaffEmails,
   incrementDraftRound,
   upsertFacultyChoice,
+  validateStudentsChoseLabInRound,
 } from '$lib/server/database/drizzle';
 import { db } from '$lib/server/database';
 import { inngest } from '$lib/server/inngest/client';
@@ -253,6 +254,23 @@ export const actions = {
               'student.total': total,
               'lab.quota': quota,
             });
+
+            if (students.length > 0) {
+              const validStudentIds = await validateStudentsChoseLabInRound(
+                db,
+                draftId,
+                lab,
+                activeDraft.currRound,
+                students,
+              );
+              const invalidStudents = students.filter(id => !validStudentIds.has(id));
+              if (invalidStudents.length > 0) {
+                logger.fatal('students did not choose this lab for current round', void 0, {
+                  'invalid.student_ids': invalidStudents,
+                });
+                error(409);
+              }
+            }
 
             await upsertFacultyChoice(
               db,
