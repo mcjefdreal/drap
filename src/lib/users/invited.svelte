@@ -2,6 +2,7 @@
   import Trash2Icon from '@lucide/svelte/icons/trash-2';
   import UserCircleIcon from '@lucide/svelte/icons/circle-user';
   import type { QueryClient } from '@tanstack/svelte-query';
+  import { toast } from 'svelte-sonner';
 
   import * as Avatar from '$lib/components/ui/avatar';
   import * as Tooltip from '$lib/components/ui/tooltip';
@@ -67,6 +68,16 @@
 
           await update();
           isDeleting = false;
+          switch (result.type) {
+            case 'success':
+              toast.success('Invitation deleted.');
+              break;
+            case 'failure':
+              toast.error('Failed to delete invitation.');
+              break;
+            default:
+              break;
+          }
         };
       }}
     >
