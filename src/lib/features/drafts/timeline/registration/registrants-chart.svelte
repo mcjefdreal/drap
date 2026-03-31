@@ -1,13 +1,31 @@
 <script lang="ts">
-  import { max } from 'd3-array';
+  import { max, min } from 'd3-array';
 
   interface Props {
     draftCreatedAt: Date;
     registrationClosedAt: Date;
+    startedAt: Date | null;
+    requestedAt: Date;
     timelineData: { date: Date; count: number }[];
   }
 
-  const { draftCreatedAt, registrationClosedAt, timelineData }: Props = $props();
+  const { draftCreatedAt, registrationClosedAt, startedAt, requestedAt, timelineData }: Props = $props();
+
+  // Chart bounds: start from draft creation, end at startedAt or current time
+  const startBound = $derived(draftCreatedAt);
+  const endBound = $derived(startedAt ?? requestedAt);
+  
+  // First data point may be after draft created, so find the actual earliest date
+  const firstDataDate = $derived(
+    timelineData.length > 0 
+      ? min(timelineData, d => d.date.getTime()) ?? startBound.getTime()
+      : startBound.getTime()
+  );
+  const lastDataDate = $derived(
+    timelineData.length > 0 
+      ? max(timelineData, d => d.date.getTime()) ?? endBound.getTime()
+      : endBound.getTime()
+  );
 
   const yMax = $derived(max(timelineData, d => d.count) ?? 0);
 
@@ -16,9 +34,9 @@
   const padding = { top: 20, right: 20, bottom: 30, left: 40 };
 
   function getX(date: Date): number {
-    if (!date || !draftCreatedAt) return padding.left;
-    const start = draftCreatedAt.getTime();
-    const end = registrationClosedAt.getTime();
+    if (!date || !startBound || !endBound) return padding.left;
+    const start = firstDataDate;
+    const end = lastDataDate;
     const range = end - start;
     if (range === 0) return padding.left;
     return padding.left + ((date.getTime() - start) / range) * (width - padding.left - padding.right);
@@ -37,6 +55,13 @@
     <span>Created: {draftCreatedAt.toLocaleDateString()}</span>
     <span class="mx-2">|</span>
     <span>Closed: {registrationClosedAt.toLocaleDateString()}</span>
+    {#if startedAt}
+      <span class="mx-2">|</span>
+      <span>Started: {startedAt.toLocaleDateString()}</span>
+    {:else}
+      <span class="mx-2">|</span>
+      <span>Current: {requestedAt.toLocaleDateString()}</span>
+    {/if}
   </div>
 
   <svg viewBox="0 0 {width} {height}" class="w-full h-full" preserveAspectRatio="none">
@@ -59,7 +84,7 @@
     <!-- Area fill -->
     {#if timelineData.length > 0}
       <path
-        d={`M ${padding.left} ${height - padding.bottom} ${timelineData.map(d => `${getX(d.date)} ${getY(d.count)}`).join(' L ')} ${regClosedX} ${height - padding.bottom} Z`}
+        d={`M ${padding.left} ${height - padding.bottom} ${timelineData.map(d => `${getX(d.date)} ${getY(d.count)}`).join(' L ')} ${getX(endBound)} ${height - padding.bottom} Z`}
         fill="#3b82f6"
         fill-opacity="0.1"
       />

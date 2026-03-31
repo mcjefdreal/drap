@@ -2300,7 +2300,7 @@ export async function fetchDraftRegistrationTimeline(db: DbConnection, draftId: 
     const result = await db
       .select({
         date: sql`date_trunc('day', ${schema.studentRank.createdAt})`.mapWith(coerceDate),
-        cumulativeCount: sql`sum(count(*)) over (order by date_trunc('day', ${schema.studentRank.createdAt}))`.mapWith(coerceNumber),
+        cumulativeCount: sql`sum(count(*)) over (order by date_trunc('day', ${schema.studentRank.createdAt}))::int`.mapWith(coerceNumber),
       })
       .from(schema.studentRank)
       .where(eq(schema.studentRank.draftId, draftId))
