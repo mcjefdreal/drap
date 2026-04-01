@@ -23,14 +23,17 @@
   const lateQuery = $derived(createFetchDraftLateRegistrantsQuery(draftId, d => d));
 
   const lateIds = $derived(new Set((lateQuery.data ?? []).map(s => s.id)));
-  
+
   const allStudents = $derived.by(() => {
     const draftees = drafteesQuery.data ?? [];
     const late = lateQuery.data ?? [];
     const map = new SvelteMap<string, Student>();
     for (const s of draftees) map.set(s.id, s);
     for (const s of late) if (!map.has(s.id)) map.set(s.id, s);
-    return Array.from(map.values()).map(s => ({ ...s, isLate: lateIds.has(s.id) })) as ExtendedStudent[];
+    return Array.from(map.values()).map(s => ({
+      ...s,
+      isLate: lateIds.has(s.id),
+    })) as ExtendedStudent[];
   });
 
   let searchTerm = $state('');
@@ -40,39 +43,35 @@
     let result = allStudents;
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
-      result = result.filter(s => 
-        s.givenName.toLowerCase().includes(q) || 
-        s.familyName.toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q)
+      result = result.filter(
+        s =>
+          s.givenName.toLowerCase().includes(q) ||
+          s.familyName.toLowerCase().includes(q) ||
+          s.email.toLowerCase().includes(q),
       );
     }
-    if (showLateOnly) 
-      result = result.filter(s => s.isLate);
-    
+    if (showLateOnly) result = result.filter(s => s.isLate);
+
     return result;
   });
 </script>
 
 <Sheet.Root>
   <Sheet.Trigger>
-    <Button variant="outline" class="gap-2">
-      View All Draftees
-    </Button>
+    <Button variant="outline" class="gap-2">View All Draftees</Button>
   </Sheet.Trigger>
   <Sheet.Content side="right" class="w-[600px] sm:max-w-[600px]">
     <Sheet.Header>
       <Sheet.Title>All Draftees</Sheet.Title>
     </Sheet.Header>
 
-    <div class="flex gap-2 mb-4">
-      <Input 
-        placeholder="Search students..." 
-        bind:value={searchTerm}
-        class="flex-1"
-      />
-      <Button 
+    <div class="mb-4 flex gap-2">
+      <Input placeholder="Search students..." bind:value={searchTerm} class="flex-1" />
+      <Button
         variant={showLateOnly ? 'secondary' : 'outline'}
-        onclick={() => { showLateOnly = !showLateOnly }}
+        onclick={() => {
+          showLateOnly = !showLateOnly;
+        }}
       >
         Late Only
       </Button>
@@ -87,9 +86,7 @@
         <p class="text-destructive">Error loading data</p>
       </div>
     {:else}
-      <DataTable data={filteredStudents}>
-        No students found
-      </DataTable>
+      <DataTable data={filteredStudents}>No students found</DataTable>
     {/if}
   </Sheet.Content>
 </Sheet.Root>

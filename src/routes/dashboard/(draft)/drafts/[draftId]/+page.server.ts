@@ -5,9 +5,43 @@ import { decode } from 'decode-formdata';
 import { error, fail } from '@sveltejs/kit';
 import { repeat, roundrobin, zip } from 'itertools';
 
-import { addToAllowlist, autoAcknowledgeLabsWithoutPreferences, beginDraftReview, concludeDraft, fetchDraftRegistrationTimeline, getAllowlistCountByDraft, getCurrentDatabaseTime, getDraftAssignmentRecords, getDraftById, getDraftByIdForUpdate, getDraftLabQuotaLabIds, getDraftLabQuotaSnapshots, getFacultyAndStaff, getLabById, getLateRegistrantsCountByDraft, getPendingLabCountInDraft, getStudentCountInDraft, getUserByEmail, getUserById, incrementDraftRound, insertLotteryChoices, isRegisteredOrAssignedInDraft, randomizeRemainingStudents, removeFromAllowlist, startDraft, syncResultsToUsers, updateDraftInitialLabQuotas, updateDraftLotteryLabQuotas } from '$lib/server/database/drizzle';
+import {
+  addToAllowlist,
+  autoAcknowledgeLabsWithoutPreferences,
+  beginDraftReview,
+  concludeDraft,
+  fetchDraftRegistrationTimeline,
+  getAllowlistCountByDraft,
+  getCurrentDatabaseTime,
+  getDraftAssignmentRecords,
+  getDraftById,
+  getDraftByIdForUpdate,
+  getDraftLabQuotaLabIds,
+  getDraftLabQuotaSnapshots,
+  getFacultyAndStaff,
+  getLabById,
+  getLateRegistrantsCountByDraft,
+  getPendingLabCountInDraft,
+  getStudentCountInDraft,
+  getUserByEmail,
+  getUserById,
+  incrementDraftRound,
+  insertLotteryChoices,
+  isRegisteredOrAssignedInDraft,
+  randomizeRemainingStudents,
+  removeFromAllowlist,
+  startDraft,
+  syncResultsToUsers,
+  updateDraftInitialLabQuotas,
+  updateDraftLotteryLabQuotas,
+} from '$lib/server/database/drizzle';
 import { db } from '$lib/server/database';
-import { DraftFinalizedBatchEmailEvent, LotteryInterventionBatchEmailEvent, RoundStartedBatchEmailEvent, UserAssignedBatchEmailEvent } from '$lib/server/inngest/schema';
+import {
+  DraftFinalizedBatchEmailEvent,
+  LotteryInterventionBatchEmailEvent,
+  RoundStartedBatchEmailEvent,
+  UserAssignedBatchEmailEvent,
+} from '$lib/server/inngest/schema';
 import { inngest } from '$lib/server/inngest/client';
 import { Logger } from '$lib/server/telemetry/logger';
 import { Tracer } from '$lib/server/telemetry/tracer';
@@ -68,16 +102,23 @@ export async function load({ params, locals: { session } }) {
       error(404);
     }
 
-    const [studentCount, assignments, quotaSnapshots, allowlistCount, lateRegistrantsCount, timelineData, requestedAt] =
-      await Promise.all([
-        getStudentCountInDraft(db, draftId),
-        getDraftAssignmentRecords(db, draftId),
-        getDraftLabQuotaSnapshots(db, draftId),
-        getAllowlistCountByDraft(db, draftId),
-        getLateRegistrantsCountByDraft(db, draftId),
-        fetchDraftRegistrationTimeline(db, draftId),
-        getCurrentDatabaseTime(db),
-      ]);
+    const [
+      studentCount,
+      assignments,
+      quotaSnapshots,
+      allowlistCount,
+      lateRegistrantsCount,
+      timelineData,
+      requestedAt,
+    ] = await Promise.all([
+      getStudentCountInDraft(db, draftId),
+      getDraftAssignmentRecords(db, draftId),
+      getDraftLabQuotaSnapshots(db, draftId),
+      getAllowlistCountByDraft(db, draftId),
+      getLateRegistrantsCountByDraft(db, draftId),
+      fetchDraftRegistrationTimeline(db, draftId),
+      getCurrentDatabaseTime(db),
+    ]);
     const labs = quotaSnapshots.map(({ labId, labName, initialQuota }) => ({
       id: labId,
       name: labName,
@@ -110,7 +151,6 @@ export async function load({ params, locals: { session } }) {
       'draft.summary.intervention_count': interventionDrafted.length,
       'draft.summary.lottery_count': lotteryDrafted.length,
     });
-
 
     return {
       draftId,
@@ -271,7 +311,7 @@ export const actions = {
               break;
             }
           }
-          
+
           await startDraft(db, draftId);
           return true;
         },

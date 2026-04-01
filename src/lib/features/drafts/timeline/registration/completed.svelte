@@ -13,7 +13,16 @@
     lateRegistrantsCount: number;
   }
 
-  const { draftId, draftCreatedAt, registrationClosedAt, startedAt, requestedAt, timelineData, studentCount, lateRegistrantsCount }: Props = $props();
+  const {
+    draftId,
+    draftCreatedAt,
+    registrationClosedAt,
+    startedAt,
+    requestedAt,
+    timelineData,
+    studentCount,
+    lateRegistrantsCount,
+  }: Props = $props();
 </script>
 
 <div class="space-y-6">
@@ -28,7 +37,7 @@
     {/if}
   </div>
 
-  <RegistrantsChart 
+  <RegistrantsChart
     {draftCreatedAt}
     {registrationClosedAt}
     {startedAt}

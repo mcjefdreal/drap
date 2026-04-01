@@ -1264,7 +1264,7 @@ export async function startDraft(db: DbConnection, draftId: bigint) {
       .set({
         startedAt: sql`now()`,
       })
-      .where(eq(schema.draft.id, draftId))
+      .where(eq(schema.draft.id, draftId));
   });
 }
 
@@ -2305,7 +2305,7 @@ export async function fetchDraftRegistrationTimeline(db: DbConnection, draftId: 
       .from(schema.studentRank)
       .where(eq(schema.studentRank.draftId, draftId))
       .groupBy(sql`date_trunc('day', ${schema.studentRank.createdAt})`)
-      .orderBy(sql`date_trunc('day', ${schema.studentRank.createdAt})`)
+      .orderBy(sql`date_trunc('day', ${schema.studentRank.createdAt})`);
 
     return result.map(r => ({
       date: r.date as Date,

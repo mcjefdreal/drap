@@ -254,12 +254,12 @@
           snapshots={finalized.snapshots}
         />
       {:else}
-        <RegistrationCompleted 
-          {draftId} 
-          draftCreatedAt={draft.activePeriodStart} 
-          registrationClosedAt={draft.registrationClosedAt} 
-          startedAt={draft.startedAt} 
-          {requestedAt} 
+        <RegistrationCompleted
+          {draftId}
+          draftCreatedAt={draft.activePeriodStart}
+          registrationClosedAt={draft.registrationClosedAt}
+          startedAt={draft.startedAt}
+          {requestedAt}
           {timelineData}
           {studentCount}
           {lateRegistrantsCount}
