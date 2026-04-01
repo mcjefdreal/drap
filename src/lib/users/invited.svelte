@@ -1,8 +1,9 @@
 <script lang="ts">
   import Trash2Icon from '@lucide/svelte/icons/trash-2';
   import UserCircleIcon from '@lucide/svelte/icons/circle-user';
-  import type { QueryClient } from '@tanstack/svelte-query';
   import { toast } from 'svelte-sonner';
+  // eslint-disable-next-line no-restricted-imports
+  import { useQueryClient } from '@tanstack/svelte-query';
 
   import * as Avatar from '$lib/components/ui/avatar';
   import * as Tooltip from '$lib/components/ui/tooltip';
@@ -20,11 +21,12 @@
 
   interface Props {
     user: User;
-    queryClient: QueryClient;
   }
 
-  const { user, queryClient }: Props = $props();
+  const { user }: Props = $props();
   const { id, givenName, familyName, email, avatarUrl, labId } = $derived(user);
+
+  const queryClient = useQueryClient();
 
   let isDeleting = $state(false);
 </script>
@@ -45,7 +47,7 @@
         {email}
       </a>
       {#if labId !== null}
-        <Badge variant="secondary" class="shrink-0 text-xs">{labId}</Badge>
+        <Badge variant="secondary" class="shrink-0 text-xs uppercase">{labId}</Badge>
       {/if}
     </div>
   </div>
@@ -63,14 +65,12 @@
 
         isDeleting = true;
         return async ({ result, update }) => {
-          if (result.type === 'success')
-            await queryClient.invalidateQueries({ queryKey: ['users', 'invited'] });
-
           await update();
           isDeleting = false;
           switch (result.type) {
             case 'success':
               toast.success('Invitation deleted.');
+              await queryClient.invalidateQueries({ queryKey: ['users', 'invited'] });
               break;
             case 'failure':
               toast.error('Failed to delete invitation.');
