@@ -27,7 +27,9 @@
     </Avatar.Root>
     <div class="flex flex-col gap-1">
       {#if givenName.length > 0 && familyName.length > 0}
-        <Card.Title class="text-base font-semibold uppercase">{familyName}, {givenName}</Card.Title>
+        <Card.Title class="text-base font-semibold"
+          ><span class="uppercase">{familyName}</span>, {givenName}</Card.Title
+        >
       {/if}
       <div class="flex flex-col gap-0.5">
         {#if labName !== null}
