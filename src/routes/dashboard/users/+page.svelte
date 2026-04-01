@@ -8,13 +8,12 @@
 
   const { data } = $props();
   const { labs, faculty } = $derived(data);
-  const users = $derived(
+
+  const { registeredAdmins = [], registeredHeads = [] } = $derived(
     Object.groupBy(faculty, ({ labName }) => {
       return labName === null ? 'registeredAdmins' : 'registeredHeads';
     }),
   );
-  const registeredAdmins = $derived(users.registeredAdmins ?? []);
-  const registeredHeads = $derived(users.registeredHeads ?? []);
 </script>
 
 <h2 class="mb-6 scroll-m-20 text-3xl font-semibold tracking-tight">Users</h2>
@@ -22,9 +21,7 @@
   <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
     <Card.Title class="text-2xl">Lab Heads</Card.Title>
     <InviteSheet type="heads">
-      {#snippet inviteForm()}
-        <FacultyForm {labs} />
-      {/snippet}
+      <FacultyForm {labs} />
     </InviteSheet>
   </Card.Header>
   <Card.Content>
@@ -39,14 +36,11 @@
     {/if}
   </Card.Content>
 </Card.Root>
-
 <Card.Root>
   <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
     <Card.Title class="text-2xl">Draft Administrators</Card.Title>
     <InviteSheet type="admins">
-      {#snippet inviteForm()}
-        <AdminForm />
-      {/snippet}
+      <AdminForm />
     </InviteSheet>
   </Card.Header>
   <Card.Content>
