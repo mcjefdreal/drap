@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AreaChart, AnnotationLine } from 'layerchart';
+  import { AreaChart, LinearGradient } from 'layerchart';
   import { cubicOut } from 'svelte/easing';
   import { max } from 'd3-array';
   import { format } from 'd3-format';
@@ -23,14 +23,24 @@
 
   const { draftCreatedAt, registrationClosedAt, startedAt, requestedAt, timelineData }: Props = $props();
 
-  const regClosedLabel = $derived(
-    registrationClosedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  );
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  const regClosedStr = $derived(registrationClosedAt.toISOString().split('T')[0]);
+  const [, rm, rd] = $derived(regClosedStr!.split('-'));
+  const regClosedLabel = `${monthNames[parseInt(rm!) - 1]} ${parseInt(rd!)}`
+  $inspect(regClosedLabel, registrationClosedAt)
+
+  const endDate = startedAt ?? requestedAt
+
+  const startStr = $derived(endDate.toISOString().split('T')[0]);
+  const [sy, sm, sd] = $derived(startStr!.split('-'));
+  const startLabel = `${sd}/${sm}/${sy}`
 
 
   const allDaysData = $derived.by(() => {
     const start = startOfDay(draftCreatedAt);
-    const lastDate = startOfDay(startedAt ?? requestedAt);
+    const lastDate = startOfDay(endDate);
+    $inspect("start", start, draftCreatedAt)
     $inspect("last", lastDate)
     $inspect("startedAt", startedAt)
     $inspect("req", requestedAt)
@@ -41,9 +51,8 @@
     const sortedData = [...timelineData].sort((a, b) => a.date.getTime() - b.date.getTime());
     
     while (!isAfter(currentDate, lastDate)) {
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const currentStr = currentDate.toISOString().split('T')[0];
-      const [year, month, day] = currentStr!.split('-');
+      const [, month, day] = currentStr!.split('-');
       const dayData = sortedData.find(d => 
         d.date.toISOString().split('T')[0] === currentStr
       );
@@ -120,15 +129,15 @@
       </div>
       <div class="text-sm text-muted-foreground">
         {#if startedAt}
-          Started: {startedAt.toLocaleDateString()}
+          Draft Started: {startLabel}
         {:else}
-          Current: {requestedAt.toLocaleDateString()}
+          Current: {startLabel}
         {/if}
       </div>
     </div>
   </Card.Header>
   <Card.Content class="pt-0">
-    <Chart.Container id="registrants-chart" config={chartConfig} class="min-h-[280px] w-full">
+    <Chart.Container id="registrants-chart" config={chartConfig} class="h-[500px] w-full">
       <AreaChart
         data={allDaysData}
         x="label"
