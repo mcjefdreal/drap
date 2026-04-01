@@ -12,9 +12,6 @@ engineStrict: true
 
 minimumReleaseAge: 1440 # 1 Day
 
-minimumReleaseAgeExclude:
-  - 'shadcn-svelte@1.2.5'
-
 strictDepBuilds: true
 
 trustPolicy: no-downgrade
