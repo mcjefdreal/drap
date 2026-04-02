@@ -1,8 +1,8 @@
 <script lang="ts">
   import { format } from 'date-fns';
 
-  import { Badge } from '$lib/components/ui/badge';
   import DesignatedLab from '$lib/users/designated-lab.svelte';
+  import { Badge } from '$lib/components/ui/badge';
   import type { DraftAssignmentRecord } from '$lib/features/drafts/types';
 
   interface Props {
@@ -16,17 +16,20 @@
 
 <div class="grid grid-cols-1 gap-2">
   <div id="section-regular-drafted" class="mb-8">
-    <h3 class="text-2xl font-bold mb-4">Regular Drafted ({regularDrafted.length})</h3>
+    <h3 class="mb-4 text-2xl font-bold">Regular Drafted ({regularDrafted.length})</h3>
     <div class="space-y-2">
       {#each regularDrafted as { id, email, givenName, familyName, studentNumber, labId, round } (id)}
-        <div class="space-y-1 flex justify-between items-center">
+        <div class="flex items-center justify-between space-y-1">
           <div class="flex flex-col">
             <span>{familyName.toUpperCase()}, {givenName}</span>
             <span class="text-sm text-muted-foreground">{studentNumber} | {email}</span>
           </div>
-          <div class="flex justify-end gap-1 items-center">
+          <div class="flex items-center justify-end gap-1">
             <DesignatedLab {labId} />
-            <Badge variant="outline" class="border-secondary bg-secondary/10 text-xs h-fit py-1 px-2">
+            <Badge
+              variant="outline"
+              class="h-fit border-secondary bg-secondary/10 px-2 py-1 text-xs"
+            >
               Round {round}
             </Badge>
           </div>
@@ -38,17 +41,20 @@
   </div>
 
   <div id="section-intervention-drafted" class="mb-8">
-    <h3 class="text-2xl font-bold mb-4">Intervention Drafted ({interventionDrafted.length})</h3>
+    <h3 class="mb-4 text-2xl font-bold">Intervention Drafted ({interventionDrafted.length})</h3>
     <div class="space-y-2">
       {#each interventionDrafted as { id, email, givenName, familyName, studentNumber, labId, assignedAt } (id)}
-        <div class="space-y-1 flex justify-between items-center">
+        <div class="flex items-center justify-between space-y-1">
           <div class="flex flex-col">
             <span>{familyName.toUpperCase()}, {givenName}</span>
             <span class="text-sm text-muted-foreground">{studentNumber} | {email}</span>
           </div>
-          <div class="flex justify-end gap-1 items-center">
+          <div class="flex items-center justify-end gap-1">
             <DesignatedLab {labId} />
-            <Badge variant="outline" class="border-secondary bg-secondary/10 text-xs h-fit py-1 px-2">
+            <Badge
+              variant="outline"
+              class="h-fit border-secondary bg-secondary/10 px-2 py-1 text-xs"
+            >
               {#if assignedAt === null}
                 <span id="intervention-date-{id}">Unknown date</span>
               {:else}
@@ -66,10 +72,10 @@
   </div>
 
   <div id="section-lottery-drafted" class="mb-8">
-    <h3 class="text-2xl font-bold mb-4">Lottery Drafted ({lotteryDrafted.length})</h3>
+    <h3 class="mb-4 text-2xl font-bold">Lottery Drafted ({lotteryDrafted.length})</h3>
     <div class="space-y-2">
       {#each lotteryDrafted as { id, email, givenName, familyName, studentNumber, labId } (id)}
-        <div class="space-y-1 flex justify-between items-center">
+        <div class="flex items-center justify-between space-y-1">
           <div class="flex flex-col">
             <span>{familyName.toUpperCase()}, {givenName}</span>
             <span class="text-sm text-muted-foreground">{studentNumber} | {email}</span>

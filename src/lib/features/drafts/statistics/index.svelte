@@ -10,7 +10,7 @@
 <Drawer.Root>
   <Drawer.Trigger>
     {#snippet child({ props })}
-      <Button variant="outline" class='border-primary text-primary' {...props}>
+      <Button variant="outline" class="border-primary text-primary" {...props}>
         See Draft Statistics
       </Button>
     {/snippet}

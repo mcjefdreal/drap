@@ -5,11 +5,11 @@
   import { lightFormat } from 'date-fns';
 
   import * as Alert from '$lib/components/ui/alert';
+  import DraftAssignments from '$lib/features/drafts/assignments/index.svelte';
+  import DraftStatistics from '$lib/features/drafts/statistics/index.svelte';
   import { Button } from '$lib/components/ui/button';
   import type { Draft, DraftLabQuotaSnapshot, Lab } from '$lib/features/drafts/types';
   import { resolve } from '$app/paths';
-  import DraftStatistics from '$lib/features/drafts/statistics/index.svelte';
-  import DraftAssignments from '$lib/features/drafts/assignments/index.svelte';
 
   interface Props {
     draftId: string;

@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  import type { ExternalProps as DisplayProps } from './display.svelte';
+  import Display, { type ExternalProps as DisplayProps } from './display.svelte';
 
   export interface Props extends DisplayProps {
     draftId: string;
@@ -9,7 +9,6 @@
 <script lang="ts">
   import Loader2Icon from '@lucide/svelte/icons/loader-2';
 
-  import Display from './display.svelte';
   import Empty from '$lib/components/ui/empty/empty.svelte';
   import { createFetchDraftAssignmentsQuery } from '$lib/queries/fetch-draft-assignments';
 
@@ -32,7 +31,7 @@
     ),
   );
 </script>
-  
+
 {#if regularDraftedQuery.isError || interventionDraftedQuery.isError || lotteryDraftedQuery.isError}
   <Empty>Uh oh! An error has occurred.</Empty>
 {:else if regularDraftedQuery.isPending || interventionDraftedQuery.isPending || lotteryDraftedQuery.isPending}
@@ -40,5 +39,10 @@
     <Loader2Icon class="size-20 animate-spin" />
   </div>
 {:else}
-  <Display regularDrafted={regularDraftedQuery.data} interventionDrafted={interventionDraftedQuery.data} lotteryDrafted={lotteryDraftedQuery.data} {...displayProps} />
+  <Display
+    regularDrafted={regularDraftedQuery.data}
+    interventionDrafted={interventionDraftedQuery.data}
+    lotteryDrafted={lotteryDraftedQuery.data}
+    {...displayProps}
+  />
 {/if}

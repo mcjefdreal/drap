@@ -10,7 +10,7 @@
 <Sheet.Root>
   <Sheet.Trigger>
     {#snippet child({ props })}
-      <Button variant="outline" class='border-primary text-primary' {...props}>
+      <Button variant="outline" class="border-primary text-primary" {...props}>
         See Drafted Students by Method
       </Button>
     {/snippet}

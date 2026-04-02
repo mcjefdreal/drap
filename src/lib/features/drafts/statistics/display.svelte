@@ -1,5 +1,9 @@
 <script lang="ts" module>
-  import type { DraftLabQuotaSnapshot, Lab } from '$lib/features/drafts/types';
+  import type {
+    DraftAssignmentRecord,
+    DraftLabQuotaSnapshot,
+    Lab,
+  } from '$lib/features/drafts/types';
 
   export interface ExternalProps {
     maxRounds: number;
@@ -13,8 +17,8 @@
   import UsersIcon from '@lucide/svelte/icons/users';
 
   import * as Card from '$lib/components/ui/card';
+
   import DraftRoundsChart from './draft-rounds-chart.svelte';
-  import type { DraftAssignmentRecord } from '$lib/features/drafts/types';
 
   interface Props extends ExternalProps {
     regularDrafted: DraftAssignmentRecord[];
@@ -22,11 +26,19 @@
     lotteryDrafted: DraftAssignmentRecord[];
   }
 
-  const { regularDrafted, interventionDrafted, lotteryDrafted, maxRounds, totalStudents, labs, snapshots }: Props = $props();
+  const {
+    regularDrafted,
+    interventionDrafted,
+    lotteryDrafted,
+    maxRounds,
+    totalStudents,
+    labs,
+    snapshots,
+  }: Props = $props();
   const participatingLabs = $derived(snapshots.length > 0 ? snapshots.length : labs.length);
 </script>
 
-<div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 mb-15">
+<div class="mb-15 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
   <Card.Root>
     <Card.Header>
       <Card.Title class="text-md font-semibold tabular-nums">Total students</Card.Title>
@@ -93,7 +105,7 @@
 
 <DraftRoundsChart
   records={regularDrafted}
-  maxRounds={maxRounds}
+  {maxRounds}
   interventionRecords={interventionDrafted}
   lotteryRecords={lotteryDrafted}
   {labs}
