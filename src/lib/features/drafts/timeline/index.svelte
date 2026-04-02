@@ -26,6 +26,7 @@
 
   interface Props {
     draftId: bigint;
+    requestedAt: Date;
     draft: Draft;
     labs: Lab[];
     studentCount: number;
@@ -33,11 +34,11 @@
     allowlistCount: number;
     lateRegistrantsCount: number;
     timelineData: { date: Date; count: number }[];
-    requestedAt: Date;
   }
 
   const {
     draftId: rawDraftId,
+    requestedAt,
     draft,
     labs,
     studentCount,
@@ -45,7 +46,6 @@
     allowlistCount,
     lateRegistrantsCount,
     timelineData,
-    requestedAt,
   }: Props = $props();
   const draftId = $derived(rawDraftId.toString());
 
@@ -254,10 +254,10 @@
       {:else}
         <RegistrationCompleted
           {draftId}
+          {requestedAt}
           draftCreatedAt={draft.activePeriodStart}
           registrationClosedAt={draft.registrationClosedAt}
           startedAt={draft.startedAt}
-          {requestedAt}
           {timelineData}
           {studentCount}
           {lateRegistrantsCount}

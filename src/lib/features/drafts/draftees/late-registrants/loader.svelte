@@ -13,7 +13,7 @@
 
   const { draftId, children }: Props = $props();
 
-  const query = $derived(createFetchDraftLateRegistrantsQuery(draftId, students => students));
+  const query = $derived(createFetchDraftLateRegistrantsQuery(draftId));
 </script>
 
 {#if query.isPending}

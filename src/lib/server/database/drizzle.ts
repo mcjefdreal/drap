@@ -13,6 +13,7 @@ import {
   inArray,
   isNotNull,
   isNull,
+  lt,
   lte,
   ne,
   or,
@@ -64,7 +65,7 @@ function coerceNumber(value: unknown) {
   throw new CoercionError('expected a number');
 }
 
-const isRegistrationClosed = sql`${schema.draft.registrationClosedAt} < now()`
+const isRegistrationClosed = lt(schema.draft.registrationClosedAt, sql`now()`)
   .mapWith(Boolean)
   .as('is_registration_closed');
 
@@ -1257,15 +1258,15 @@ export async function incrementDraftRound(db: DbConnection, draftId: bigint) {
   });
 }
 
-export async function startDraft(db: DbConnection, draftId: bigint) {
-  return await tracer.asyncSpan('start-draft-round', async span => {
+export async function markDraftAsStarted(db: DbConnection, draftId: bigint) {
+  return await tracer.asyncSpan('mark-draft-as-started', async span => {
     span.setAttribute('database.draft.id', draftId.toString());
     return await db
       .update(schema.draft)
-      .set({
-        startedAt: sql`now()`,
-      })
-      .where(eq(schema.draft.id, draftId));
+      .set({ startedAt: sql`now()` })
+      .where(eq(schema.draft.id, draftId))
+      .returning({ startedAt: sql`${schema.draft.startedAt}`.mapWith(coerceDate) })
+      .then(assertSingle);
   });
 }
 
@@ -2266,7 +2267,7 @@ export async function getLateRegistrantsByDraft(db: DbConnection, draftId: bigin
       .where(
         and(
           eq(schema.studentRank.draftId, draftId),
-          sql`${schema.studentRank.createdAt} > ${schema.draft.registrationClosedAt}`,
+          lt(schema.draft.registrationClosedAt, schema.studentRank.createdAt),
         ),
       )
       .groupBy(schema.user.id, schema.facultyChoiceUser.labId)
@@ -2277,7 +2278,6 @@ export async function getLateRegistrantsByDraft(db: DbConnection, draftId: bigin
 export async function getLateRegistrantsCountByDraft(db: DbConnection, draftId: bigint) {
   return await tracer.asyncSpan('get-late-registrants-count-by-draft', async span => {
     span.setAttribute('database.draft.id', draftId.toString());
-
     const { result } = await db
       .select({ result: count(schema.studentRank.userId) })
       .from(schema.studentRank)
@@ -2285,32 +2285,25 @@ export async function getLateRegistrantsCountByDraft(db: DbConnection, draftId: 
       .where(
         and(
           eq(schema.studentRank.draftId, draftId),
-          sql`${schema.draft.registrationClosedAt} < ${schema.studentRank.createdAt}`,
+          lt(schema.draft.registrationClosedAt, schema.studentRank.createdAt),
         ),
       )
       .then(assertSingle);
-
     return result;
   });
 }
 
-export async function fetchDraftRegistrationTimeline(db: DbConnection, draftId: bigint) {
-  return await tracer.asyncSpan('fetch-draft-registration-timeline', async span => {
+export async function aggregateDraftRegistrationTimelineByDay(db: DbConnection, draftId: bigint) {
+  return await tracer.asyncSpan('aggregate-draft-registration-timeline-by-day', async span => {
     span.setAttribute('database.draft.id', draftId.toString());
-
-    const result = await db
+    return await db
       .select({
         date: sql`date_trunc('day', ${schema.studentRank.createdAt})`.mapWith(coerceDate),
-        dailyCount: sql`count(*)::int`,
+        dailyCount: count(),
       })
       .from(schema.studentRank)
       .where(eq(schema.studentRank.draftId, draftId))
-      .groupBy(sql`date_trunc('day', ${schema.studentRank.createdAt})`)
-      .orderBy(sql`date_trunc('day', ${schema.studentRank.createdAt})`);
-
-    return result.map(r => ({
-      date: r.date as Date,
-      count: r.dailyCount as number,
-    }));
+      .groupBy(({ date }) => date)
+      .orderBy(({ date }) => date);
   });
 }

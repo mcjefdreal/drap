@@ -36,7 +36,6 @@
       </p>
     {/if}
   </div>
-
   <RegistrantsChart
     {draftCreatedAt}
     {registrationClosedAt}
@@ -44,7 +43,6 @@
     {requestedAt}
     {timelineData}
   />
-
   <div class="flex justify-end">
     <DrafteesSheet {draftId} />
   </div>

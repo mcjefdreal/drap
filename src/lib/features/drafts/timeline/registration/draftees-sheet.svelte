@@ -19,8 +19,8 @@
 
   const { draftId }: Props = $props();
 
-  const drafteesQuery = $derived(createFetchDrafteesQuery(draftId, d => d));
-  const lateQuery = $derived(createFetchDraftLateRegistrantsQuery(draftId, d => d));
+  const drafteesQuery = $derived(createFetchDrafteesQuery(draftId));
+  const lateQuery = $derived(createFetchDraftLateRegistrantsQuery(draftId));
 
   const lateIds = $derived(new Set((lateQuery.data ?? []).map(s => s.id)));
 
@@ -64,7 +64,6 @@
     <Sheet.Header>
       <Sheet.Title>All Draftees</Sheet.Title>
     </Sheet.Header>
-
     <div class="mb-4 flex gap-2">
       <Input placeholder="Search students..." bind:value={searchTerm} class="flex-1" />
       <Button
@@ -76,7 +75,6 @@
         Late Only
       </Button>
     </div>
-
     {#if drafteesQuery.isPending || lateQuery.isPending}
       <div class="flex h-32 items-center justify-center">
         <p class="text-muted-foreground">Loading...</p>

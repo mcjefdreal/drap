@@ -13,18 +13,21 @@
   import * as Chart from '$lib/components/ui/chart';
   import { Badge } from '$lib/components/ui/badge';
 
+  interface TimelineData {
+    date: Date;
+    count: number;
+  }
+
   interface Props {
     draftCreatedAt: Date;
     registrationClosedAt: Date;
     startedAt: Date | null;
     requestedAt: Date;
-    timelineData: { date: Date; count: number }[];
+    timelineData: TimelineData[];
   }
 
   const { draftCreatedAt, registrationClosedAt, startedAt, requestedAt, timelineData }: Props =
     $props();
-
-  const endDate = $derived(new Date(startedAt ?? requestedAt));
 
   const localClosedAt = $derived(new Date(registrationClosedAt));
 
@@ -37,30 +40,27 @@
 
   const allDaysData = $derived.by(() => {
     const start = startOfDay(draftCreatedAt);
-    const lastDate = startOfDay(endDate);
+    const lastDate = startOfDay(startedAt ?? requestedAt);
     const result: { date: Date; label: string; count: number }[] = [];
-
-    const currentDate = new SvelteDate(start);
 
     const sortedData = [...timelineData].sort((a, b) => a.date.getTime() - b.date.getTime());
 
+    const currentDate = new Date(start);
     while (!isAfter(currentDate, lastDate)) {
       const currentStr = currentDate.toDateString();
       const dayData = sortedData.find(d => d.date.toDateString() === currentStr);
-
       result.push({
         date: new Date(currentDate),
         label: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         count: dayData?.count ?? 0,
       });
-
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
     return result;
   });
 
-  const yMax = $derived(max(timelineData, d => d.count) ?? 1);
+  const yMax = $derived(max(timelineData, ({ count }) => count) ?? 1);
   const yTicks = $derived.by(() => {
     const step = Math.max(1, tickStep(0, yMax, 4));
     const ticks = Array.from({ length: Math.floor(yMax / step) + 1 }, (_, index) => index * step);
@@ -68,7 +68,7 @@
     return [...ticks, yMax];
   });
 
-  const xTicks = $derived(allDaysData.map(d => d.label));
+  const xTicks = $derived(allDaysData.map(({ label }) => label));
 
   const integerFormat = format('d');
 
@@ -113,10 +113,10 @@
         <Card.Description>Shows how many students registered each day</Card.Description>
       </div>
       <div class="text-sm text-muted-foreground">
-        {#if startedAt}
-          Draft Started: {endDate.toLocaleDateString()}
+        {#if startedAt === null}
+          Current: {requestedAt.toLocaleDateString()}
         {:else}
-          Current: {endDate.toLocaleDateString()}
+          Draft Started: {startedAt.toLocaleDateString()}
         {/if}
       </div>
     </div>
@@ -152,21 +152,21 @@
         }}
       >
         {#snippet aboveMarks({ context })}
-          {@const { xScale } = context}
-          {@const { yScale } = context}
+          {@const { xScale, yScale } = context}
           {#if xScale && regClosedLabel}
+            {@const [y1, y2] = yScale.range()}
             <line
               x1={xScale(regClosedLabel)}
               x2={xScale(regClosedLabel)}
-              y1={yScale.range()[1]}
-              y2={yScale.range()[0]}
+              {y1}
+              {y2}
               stroke="#ef4444"
               stroke-dasharray="4,4"
               stroke-width="1"
             />
             <text
               x={xScale(regClosedLabel)}
-              y={yScale.range()[1] - 10}
+              y={y2 - 10}
               text-anchor="middle"
               fill="#ef4444"
               font-size="11"

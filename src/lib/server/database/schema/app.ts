@@ -82,13 +82,10 @@ export const draft = app.table(
       mode: 'date',
       withTimezone: true,
     }).notNull(),
+    startedAt: timestamp('started_at', { mode: 'date', withTimezone: true }),
     activePeriod: tstzrange('active_period')
       .notNull()
       .default(sql`tstzrange(now(), null, '[)')`),
-    startedAt: timestamp('started_at', {
-      mode: 'date',
-      withTimezone: true,
-    }),
   },
   ({ currRound, maxRounds }) => [
     check('draft_curr_round_within_bounds', sql`${currRound} BETWEEN 0 AND ${maxRounds} + 1`),

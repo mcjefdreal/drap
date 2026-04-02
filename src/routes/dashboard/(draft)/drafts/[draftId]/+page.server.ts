@@ -7,10 +7,10 @@ import { repeat, roundrobin, zip } from 'itertools';
 
 import {
   addToAllowlist,
+  aggregateDraftRegistrationTimelineByDay,
   autoAcknowledgeLabsWithoutPreferences,
   beginDraftReview,
   concludeDraft,
-  fetchDraftRegistrationTimeline,
   getAllowlistCountByDraft,
   getDraftAssignmentRecords,
   getDraftById,
@@ -27,9 +27,9 @@ import {
   incrementDraftRound,
   insertLotteryChoices,
   isRegisteredOrAssignedInDraft,
+  markDraftAsStarted,
   randomizeRemainingStudents,
   removeFromAllowlist,
-  startDraft,
   syncResultsToUsers,
   updateDraftInitialLabQuotas,
   updateDraftLotteryLabQuotas,
@@ -108,14 +108,19 @@ export async function load({ params, locals: { session } }) {
       allowlistCount,
       lateRegistrantsCount,
       timelineData,
-    ] = await Promise.all([
-      getStudentCountInDraft(db, draftId),
-      getDraftAssignmentRecords(db, draftId),
-      getDraftLabQuotaSnapshots(db, draftId),
-      getAllowlistCountByDraft(db, draftId),
-      getLateRegistrantsCountByDraft(db, draftId),
-      fetchDraftRegistrationTimeline(db, draftId),
-    ]);
+    ] = await db.transaction(
+      async db =>
+        await Promise.all([
+          getStudentCountInDraft(db, draftId),
+          getDraftAssignmentRecords(db, draftId),
+          getDraftLabQuotaSnapshots(db, draftId),
+          getAllowlistCountByDraft(db, draftId),
+          getLateRegistrantsCountByDraft(db, draftId),
+          aggregateDraftRegistrationTimelineByDay(db, draftId),
+        ]),
+      { isolationLevel: 'repeatable read' },
+    );
+
     const labs = quotaSnapshots.map(({ labId, labName, initialQuota }) => ({
       id: labId,
       name: labName,
@@ -152,6 +157,7 @@ export async function load({ params, locals: { session } }) {
     return {
       draftId,
       draft: { id: draftId, ...draft },
+      requestedAt: new Date(),
       labs,
       studentCount,
       finalized: {
@@ -173,7 +179,6 @@ export async function load({ params, locals: { session } }) {
       allowlistCount,
       lateRegistrantsCount,
       timelineData,
-      requestedAt: new Date(),
     };
   });
 }
@@ -285,6 +290,9 @@ export const actions = {
             return false;
           }
 
+          const { startedAt } = await markDraftAsStarted(db, draftId);
+          logger.info('draft officially started', { 'draft.started_at': startedAt.toISOString() });
+
           while (true) {
             const draftRound = await incrementDraftRound(db, draftId);
             assert(typeof draftRound !== 'undefined', 'cannot start a non-existent draft');
@@ -308,7 +316,6 @@ export const actions = {
             }
           }
 
-          await startDraft(db, draftId);
           return true;
         },
         { isolationLevel: 'read committed' },

@@ -43,7 +43,7 @@ export async function GET({ params, locals: { session } }) {
 
     logger.debug('late registrants fetched', {
       'draft.id': draftId.toString(),
-      'late_registrants.count': lateRegistrants.length,
+      'draft.late_registrants.count': lateRegistrants.length,
     });
 
     return new Response(devalue.stringify(lateRegistrants), {

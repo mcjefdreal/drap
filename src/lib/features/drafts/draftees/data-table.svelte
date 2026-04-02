@@ -45,7 +45,6 @@
           : null;
       },
     }),
-
     columnHelper.accessor(({ studentNumber }) => studentNumber, {
       id: 'studentNumber',
       header: header =>
@@ -55,7 +54,6 @@
         }),
       cell: info => info.getValue(),
     }),
-
     columnHelper.accessor(
       ({ familyName, givenName }) => `${familyName.toUpperCase()}, ${givenName}`,
       {
@@ -68,7 +66,6 @@
         cell: info => info.getValue(),
       },
     ),
-
     columnHelper.accessor(({ email }) => email, {
       id: 'email',
       header: header =>
@@ -78,14 +75,12 @@
         }),
       cell: info => info.getValue(),
     }),
-
     columnHelper.accessor(({ labId }) => labId, {
       id: 'labId',
       header: 'Designated Lab',
       cell: info => renderComponent(DesignatedLab, { labId: info.getValue() }),
       filterFn: 'equalsString',
     }),
-
     columnHelper.accessor(({ labs }) => labs, {
       id: 'labs',
       header: 'Lab Preferences',
