@@ -2,16 +2,16 @@
   import {
     createColumnHelper,
     getCoreRowModel,
+    getFacetedRowModel,
+    getFacetedUniqueValues,
     getFilteredRowModel,
     getSortedRowModel,
   } from '@tanstack/table-core';
 
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
   import * as Table from '$lib/components/ui/table';
+  import MultiSelectFilterHeader from '$lib/features/drafts/draftees/multi-select-filter-header.svelte';
   import PreferredLab from '$lib/users/preferred-lab.svelte';
   import SortByHeader from '$lib/features/drafts/draftees/sort-by-header.svelte';
-  import { Badge } from '$lib/components/ui/badge';
-  import { Button } from '$lib/components/ui/button';
   import { createSvelteTable, FlexRender, renderComponent } from '$lib/components/ui/data-table';
   import type { Lab, Student } from '$lib/features/drafts/types';
 
@@ -33,6 +33,7 @@
         renderComponent(SortByHeader, {
           header: 'Student Number',
           onclick: header.column.getToggleSortingHandler(),
+          sortState: header.column.getIsSorted(),
         }),
       cell: info => info.getValue(),
     }),
@@ -45,6 +46,7 @@
           renderComponent(SortByHeader, {
             header: 'Name',
             onclick: header.column.getToggleSortingHandler(),
+            sortState: header.column.getIsSorted(),
           }),
         cell: info => info.getValue(),
       },
@@ -56,15 +58,33 @@
         renderComponent(SortByHeader, {
           header: 'Email',
           onclick: header.column.getToggleSortingHandler(),
+          sortState: header.column.getIsSorted(),
         }),
       cell: info => info.getValue(),
     }),
 
     columnHelper.accessor(({ labs }) => labs, {
       id: 'labs',
-      header: 'Lab Preferences',
+      header(header) {
+        const filterValue = header.column.getFilterValue();
+        return renderComponent(MultiSelectFilterHeader, {
+          header: 'Lab Preferences',
+          filtered: header.column.getIsFiltered(),
+          onValueChange(values) {
+            header.column.setFilterValue(values.length === 0 ? null : values);
+          },
+          options: Array.from(header.column.getFacetedUniqueValues().entries())
+            .filter(([value]) => typeof value === 'string')
+            .sort((left, right) => left[0].localeCompare(right[0]))
+            .map(([value, count]) => ({ count, value })),
+          values: Array.isArray(filterValue)
+            ? filterValue.filter(lab => typeof lab === 'string')
+            : [],
+        });
+      },
       cell: info => renderComponent(PreferredLab, { labs: info.getValue() }),
       filterFn: 'arrIncludesSome',
+      getUniqueValues: ({ labs }) => labs,
     }),
 
     columnHelper.accessor(({ id }) => id, {
@@ -74,9 +94,6 @@
     }),
   ];
 
-  // Get all possible labs for filtering
-  const preferredLabFilters = $derived([...new Set(data.flatMap(({ labs }) => labs))].sort());
-
   // This only initializes lazily on load.
   // We put it here so that we don't needlessly initialize state
   // in the `pending` case and the `error` case.
@@ -84,80 +101,17 @@
     createSvelteTable({
       data,
       columns,
-
-      // Normal state
+      getFacetedRowModel: getFacetedRowModel(),
+      getFacetedUniqueValues: getFacetedUniqueValues(),
       getCoreRowModel: getCoreRowModel(),
-
-      // Sorted state
       getSortedRowModel: getSortedRowModel(),
-
-      // Filtered state
       getFilteredRowModel: getFilteredRowModel(),
     }),
   );
 
-  const headerGroups = $derived.by(() => table.getHeaderGroups());
-  const { rows } = $derived.by(() => table.getRowModel());
-
-  const preferredLabFilterValues = $derived.by(() => {
-    const value = table.getColumn('labs')?.getFilterValue();
-    return Array.isArray(value) ? value.filter(lab => typeof lab === 'string') : [];
-  });
+  const headerGroups = $derived(table.getHeaderGroups());
+  const { rows } = $derived(table.getRowModel());
 </script>
-
-<!-- Filter Buttons -->
-<div class="mx-4 mb-4 flex items-center justify-end gap-2">
-  <!-- Lab Preferences -->
-  {#if preferredLabFilters.length > 0}
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger>
-        <Button
-          variant="outline"
-          class={preferredLabFilterValues.length === 0 ? '' : 'border-secondary text-secondary'}
-        >
-          Lab Preference: {preferredLabFilterValues.length === 0 ||
-          preferredLabFilterValues.length === preferredLabFilters.length
-            ? 'All'
-            : preferredLabFilterValues.map(lab => lab.toUpperCase()).join(', ')}
-        </Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content>
-        <DropdownMenu.Item
-          onclick={() => {
-            table.getColumn('labs')?.setFilterValue(() => []);
-          }}
-        >
-          Clear Filters
-        </DropdownMenu.Item>
-        {#each preferredLabFilters as filter (filter)}
-          <DropdownMenu.Item
-            onclick={() => {
-              table.getColumn('labs')?.setFilterValue((current: string[] | undefined) => {
-                const selected = Array.isArray(current)
-                  ? current.filter(lab => typeof lab === 'string')
-                  : [];
-
-                return selected.includes(filter)
-                  ? selected.filter(lab => lab !== filter)
-                  : [...selected, filter];
-              });
-            }}
-          >
-            {#if preferredLabFilterValues.includes(filter)}
-              <Badge variant="outline" class="mr-1 border-primary bg-primary/10 text-xs uppercase">
-                {filter.toUpperCase()}
-              </Badge>
-            {:else}
-              <Badge variant="outline" class="mr-1 border-muted bg-muted/10 text-xs uppercase">
-                {filter.toUpperCase()}
-              </Badge>
-            {/if}
-          </DropdownMenu.Item>
-        {/each}
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
-  {/if}
-</div>
 
 <!-- Table -->
 <div class="mx-4 rounded-sm">
