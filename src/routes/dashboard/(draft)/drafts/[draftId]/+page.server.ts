@@ -101,23 +101,23 @@ export async function load({ params, locals: { session } }) {
       error(404);
     }
 
-    const [
+    const {
       studentCount,
       assignments,
       quotaSnapshots,
       allowlistCount,
       lateRegistrantsCount,
       timelineData,
-    ] = await db.transaction(
-      async db =>
-        await Promise.all([
-          getStudentCountInDraft(db, draftId),
-          getDraftAssignmentRecords(db, draftId),
-          getDraftLabQuotaSnapshots(db, draftId),
-          getAllowlistCountByDraft(db, draftId),
-          getLateRegistrantsCountByDraft(db, draftId),
-          getDraftRegistrationTimeline(db, draftId),
-        ]),
+    } = await db.transaction(
+      // Needs to be done sequentially because parallel queries in a transaction are not supported.
+      async db => ({
+        studentCount: await getStudentCountInDraft(db, draftId),
+        assignments: await getDraftAssignmentRecords(db, draftId),
+        quotaSnapshots: await getDraftLabQuotaSnapshots(db, draftId),
+        allowlistCount: await getAllowlistCountByDraft(db, draftId),
+        lateRegistrantsCount: await getLateRegistrantsCountByDraft(db, draftId),
+        timelineData: await getDraftRegistrationTimeline(db, draftId),
+      }),
       { isolationLevel: 'repeatable read' },
     );
 
