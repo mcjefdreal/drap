@@ -50,6 +50,12 @@ export interface DraftAssignmentRecord extends Pick<
   assignedAt: schema.FacultyChoice['createdAt'] | null;
 }
 
+export interface DraftAssignmentCountByAttribute {
+  labId: string;
+  round: number | null;
+  count: number;
+}
+
 export interface DraftRegistrationAllowlistEntry extends Pick<
   schema.DraftRegistrationAllowlist,
   'draftId' | 'studentUserId' | 'createdAt' | 'adminUserId'
