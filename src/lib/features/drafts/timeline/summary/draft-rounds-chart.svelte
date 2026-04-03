@@ -221,7 +221,7 @@
     </div>
   </Card.Header>
   <Card.Content class="pt-0">
-    <Chart.Container id="draft-rounds-chart" config={chartConfig} class="min-h-[280px] w-full">
+    <Chart.Container id="draft-rounds-chart" config={chartConfig} class="min-h-70 w-full">
       <AreaChart
         data={chartPoints}
         x="tooltipLabel"
