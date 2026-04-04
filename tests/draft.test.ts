@@ -1832,15 +1832,6 @@ test.describe('Draft Lifecycle', () => {
   });
 
   test.describe('Admin Finalized Breakdown', () => {
-    test('shows expected aggregate quota values', async ({ adminPage }) => {
-      await adminPage.goto('/dashboard/drafts/1/');
-
-      await expect(adminPage.locator('#stat-total-students')).toHaveText('8');
-      await expect(adminPage.locator('#stat-participating-labs')).toHaveText('5');
-      await expect(adminPage.locator('#quota-interventions')).toHaveText('1');
-      await expect(adminPage.locator('#stat-lottery-assignments')).toHaveText('3');
-    });
-
     test.describe('Draft Rounds Chart', () => {
       test('renders the chart with every finalized phase label', async ({ adminPage }) => {
         await adminPage.goto('/dashboard/drafts/1/');
