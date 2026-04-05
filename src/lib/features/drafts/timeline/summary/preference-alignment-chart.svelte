@@ -85,6 +85,7 @@
         label="label"
         c="color"
         innerRadius={0.6}
+        padding={{ right: 100 }}
         legend={{ orientation: 'vertical', placement: 'right' }}
       >
         {#snippet tooltip()}
