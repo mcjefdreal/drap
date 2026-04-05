@@ -7,7 +7,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { parse } from 'valibot';
 
 import * as GOOGLE from '$lib/server/env/google';
-import { ASSERT_DOMAIN } from '$lib/server/env/drap/assert-domain';
+import { ASSERT_DOMAIN } from '$lib/server/env/drap/oauth';
 import { AuthorizationCode, IdToken, TokenResponse } from '$lib/server/models/oauth';
 import { db } from '$lib/server/database';
 import { ENCRYPTION_KEY } from '$lib/server/env/drap/crypto';

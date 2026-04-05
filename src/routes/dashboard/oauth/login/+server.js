@@ -2,7 +2,7 @@ import { addMinutes } from 'date-fns';
 import { error, redirect } from '@sveltejs/kit';
 
 import * as GOOGLE from '$lib/server/env/google';
-import { ASSERT_DOMAIN } from '$lib/server/env/drap/assert-domain';
+import { ASSERT_DOMAIN } from '$lib/server/env/drap/oauth';
 import { Logger } from '$lib/server/telemetry/logger';
 import { OAUTH_SCOPE_STRING, SENDER_SCOPE_STRING } from '$lib/server/models/oauth';
 
