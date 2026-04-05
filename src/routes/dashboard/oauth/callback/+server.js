@@ -86,6 +86,7 @@ export async function GET({ fetch, cookies, setHeaders, url: { searchParams } })
         error(500, 'Email not verified.');
       }
 
+      // Validate UP email address
       const email = addresses.parseOneAddress(token.email);
       if (email === null) {
         logger.fatal('invalid email address from Google');
