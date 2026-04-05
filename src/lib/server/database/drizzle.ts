@@ -65,8 +65,11 @@ function coerceNumber(value: unknown) {
   switch (typeof value) {
     case 'number':
       return value;
-    case 'string':
-      return Number.parseFloat(value);
+    case 'string': {
+      const parsed = Number.parseFloat(value);
+      if (Number.isNaN(parsed)) throw new CoercionError(`expected a numeric string, got: ${value}`);
+      return parsed;
+    }
     default:
       throw new CoercionError('expected a number');
   }
