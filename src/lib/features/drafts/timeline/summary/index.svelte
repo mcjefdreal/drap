@@ -1,24 +1,40 @@
 <script lang="ts">
   import CheckCircle2Icon from '@lucide/svelte/icons/check-circle-2';
+  import FlaskConicalIcon from '@lucide/svelte/icons/flask-conical';
   import SparklesIcon from '@lucide/svelte/icons/sparkles';
   import UsersIcon from '@lucide/svelte/icons/users';
 
   import * as Alert from '$lib/components/ui/alert';
   import * as Card from '$lib/components/ui/card';
   import DraftAssignments from '$lib/features/drafts/assignments/index.svelte';
-  import type { Draft, DraftAssignmentSummary } from '$lib/features/drafts/types';
+  import type {
+    Draft,
+    DraftAssignmentSummary,
+    DraftSummaryChartData,
+  } from '$lib/features/drafts/types';
 
   import DraftRoundsChart from './draft-rounds-chart.svelte';
+  import LabDistributionChart from './lab-distribution-chart.svelte';
+  import PreferenceAlignmentChart from './preference-alignment-chart.svelte';
+  import SupplyDemandChart from './supply-demand-chart.svelte';
 
   interface Props {
     draftId: string;
     draft: Pick<Draft, 'activePeriodStart' | 'activePeriodEnd' | 'maxRounds'>;
     totalStudents: number;
     assignmentSummary: DraftAssignmentSummary;
+    draftSummaryChartData: DraftSummaryChartData;
     isReview: boolean;
   }
 
-  const { draftId, draft, totalStudents, assignmentSummary, isReview }: Props = $props();
+  const {
+    draftId,
+    draft,
+    totalStudents,
+    assignmentSummary,
+    draftSummaryChartData,
+    isReview,
+  }: Props = $props();
 </script>
 
 <div class="@container space-y-4">
@@ -39,66 +55,37 @@
       </Alert.Description>
     </Alert.Root>
   {/if}
-  <div class="mb-15 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-    <Card.Root>
-      <Card.Header>
-        <Card.Title class="text-md font-semibold tabular-nums">Total Students</Card.Title>
-        <Card.Title id="stat-total-students" class="text-4xl font-semibold tabular-nums">
-          {totalStudents}
-        </Card.Title>
+  <div class="flex flex-wrap gap-2">
+    <Card.Root variant="soft" class="preset-tonal-muted max-w-56 min-w-40 flex-1 gap-2 py-4">
+      <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-0">
+        <Card.Title class="text-sm font-medium">Total Students</Card.Title>
+        <UsersIcon class="size-4 text-muted-foreground" />
       </Card.Header>
-      <Card.Footer class="flex-col items-start gap-1.5 text-sm">
-        <div class="flex items-center gap-2 font-medium text-muted-foreground">
-          <UsersIcon class="size-4 text-muted-foreground" />
-          All Registered Participants
-        </div>
-      </Card.Footer>
+      <Card.Content>
+        <p id="stat-total-students" class="text-2xl font-bold tabular-nums">{totalStudents}</p>
+        <p class="text-xs text-muted-foreground">All Registered Participants</p>
+      </Card.Content>
     </Card.Root>
-    <Card.Root class="bg-linear-to-br from-muted/30 to-muted/10">
-      <Card.Header>
-        <Card.Title class="text-md font-semibold tabular-nums">Participating Labs</Card.Title>
-        <Card.Title id="stat-participating-labs" class="text-4xl font-semibold tabular-nums">
+    <Card.Root variant="soft" class="preset-tonal-muted max-w-56 min-w-40 flex-1 gap-2 py-4">
+      <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-0">
+        <Card.Title class="text-sm font-medium">Participating Labs</Card.Title>
+        <FlaskConicalIcon class="size-4 text-muted-foreground" />
+      </Card.Header>
+      <Card.Content>
+        <p id="stat-participating-labs" class="text-2xl font-bold tabular-nums">
           {assignmentSummary.metrics.participatingLabCount}
-        </Card.Title>
-      </Card.Header>
-      <Card.Footer class="flex-col items-start gap-1.5 text-sm">
-        <div class="text-muted-foreground">Active Labs in Draft</div>
-      </Card.Footer>
-    </Card.Root>
-    <Card.Root class="bg-linear-to-br from-muted/30 to-muted/10">
-      <Card.Header>
-        <Card.Title class="text-md font-semibold tabular-nums">Max Rounds</Card.Title>
-        <Card.Title id="stat-max-rounds" class="text-4xl font-semibold tabular-nums">
-          {draft.maxRounds}
-        </Card.Title>
-      </Card.Header>
-      <Card.Footer class="flex-col items-start gap-1.5 text-sm">
-        <div class="text-muted-foreground">Regular draft rounds</div>
-      </Card.Footer>
-    </Card.Root>
-    <Card.Root class="bg-linear-to-br from-muted/30 to-muted/10">
-      <Card.Header>
-        <Card.Title class="text-md font-semibold tabular-nums">Interventions</Card.Title>
-        <Card.Title id="quota-interventions" class="text-4xl font-semibold tabular-nums">
-          {assignmentSummary.metrics.interventionDraftedCount}
-        </Card.Title>
-      </Card.Header>
-      <Card.Footer class="flex-col items-start gap-1.5 text-sm">
-        <div class="text-muted-foreground">Interventions Made</div>
-      </Card.Footer>
-    </Card.Root>
-    <Card.Root class="bg-linear-to-br from-muted/30 to-muted/10">
-      <Card.Header>
-        <Card.Title class="text-md font-semibold tabular-nums">Lottery Assignments</Card.Title>
-        <Card.Title id="stat-lottery-assignments" class="text-4xl font-semibold tabular-nums">
-          {assignmentSummary.metrics.lotteryDraftedCount}
-        </Card.Title>
-      </Card.Header>
-      <Card.Footer class="flex-col items-start gap-1.5 text-sm">
-        <div class="text-muted-foreground">Students Chosen During Lottery</div>
-      </Card.Footer>
+        </p>
+        <p class="text-xs text-muted-foreground">Active Labs in Draft</p>
+      </Card.Content>
     </Card.Root>
   </div>
-  <DraftRoundsChart chart={assignmentSummary.chart} />
+  <div class="space-y-4">
+    <DraftRoundsChart chart={assignmentSummary.chart} />
+    <SupplyDemandChart data={draftSummaryChartData.supplyVsDemand} />
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <LabDistributionChart data={draftSummaryChartData.labDistribution} />
+      <PreferenceAlignmentChart data={draftSummaryChartData.preferenceAlignment} />
+    </div>
+  </div>
   <DraftAssignments {draftId} maxRounds={draft.maxRounds} />
 </div>

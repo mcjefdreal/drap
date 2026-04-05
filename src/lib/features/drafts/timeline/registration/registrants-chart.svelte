@@ -9,6 +9,7 @@
 
   import * as Card from '$lib/components/ui/card';
   import * as Chart from '$lib/components/ui/chart';
+  import { assert } from '$lib/assert';
   import { Badge } from '$lib/components/ui/badge';
 
   interface TimelineData {
@@ -174,7 +175,11 @@
         {#snippet tooltip()}
           <Chart.Tooltip
             indicator="dot"
-            labelFormatter={value => (value instanceof Date ? formatDayLabel(value) : `${value}`)}
+            labelAccessor={d => {
+              assert(typeof d === 'object' && d !== null && 'date' in d);
+              assert(d.date instanceof Date, 'expected date');
+              return formatDayLabel(d.date);
+            }}
           />
         {/snippet}
       </AreaChart>

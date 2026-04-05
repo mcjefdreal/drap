@@ -17,9 +17,11 @@ import {
   getDraftByIdForUpdate,
   getDraftLabQuotaLabIds,
   getDraftLabQuotaSnapshots,
+  getDraftPreferenceAlignment,
   getDraftRegistrationTimeline,
   getFacultyAndStaff,
   getLabById,
+  getLabDemandBordaScores,
   getLateRegistrantsCountByDraft,
   getPendingLabCountInDraft,
   getStudentCountInDraft,
@@ -46,7 +48,7 @@ import { inngest } from '$lib/server/inngest/client';
 import { Logger } from '$lib/server/telemetry/logger';
 import { Tracer } from '$lib/server/telemetry/tracer';
 
-import { buildDraftAssignmentSummary } from './assignment-summary.server';
+import { buildDraftAssignmentSummary, buildDraftSummaryChartData } from './assignment-summary';
 
 const enum AllowlistAddResult {
   NotAStudent = -3,
@@ -111,6 +113,8 @@ export async function load({ params, locals: { session } }) {
       lateRegistrantsCount,
       timelineData,
       assignmentCountsByAttribute,
+      bordaScores,
+      alignmentRows,
     } = await db.transaction(
       // Needs to be done sequentially because parallel queries in a transaction are not supported.
       async db => ({
@@ -120,6 +124,8 @@ export async function load({ params, locals: { session } }) {
         lateRegistrantsCount: await getLateRegistrantsCountByDraft(db, draftId),
         timelineData: await getDraftRegistrationTimeline(db, draftId),
         assignmentCountsByAttribute: await getDraftAssignmentCountsByAttribute(db, draftId),
+        bordaScores: await getLabDemandBordaScores(db, draftId),
+        alignmentRows: await getDraftPreferenceAlignment(db, draftId),
       }),
       { isolationLevel: 'repeatable read' },
     );
@@ -142,6 +148,16 @@ export async function load({ params, locals: { session } }) {
       studentCount,
     );
 
+    const draftSummaryChartData = buildDraftSummaryChartData(
+      assignmentCountsByAttribute,
+      labs,
+      quotaSnapshots,
+      bordaScores,
+      alignmentRows,
+      draft.maxRounds,
+      studentCount,
+    );
+
     return {
       draftId,
       draft: { id: draftId, ...draft },
@@ -153,6 +169,7 @@ export async function load({ params, locals: { session } }) {
         finalizedQuota: row.initialQuota + row.lotteryQuota,
       })),
       assignmentSummary,
+      draftSummaryChartData,
       allowlistCount,
       lateRegistrantsCount,
       timelineData,

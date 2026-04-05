@@ -96,3 +96,44 @@ export interface DraftRegistrationAllowlistEntry extends Pick<
   adminEmail: string;
   submittedAt: Date | null;
 }
+
+export interface DraftLabDistributionEntry {
+  labId: string | null;
+  labName: string;
+  count: number;
+}
+
+export interface DraftPreferenceAlignmentSlice {
+  label: string;
+  count: number;
+}
+
+export interface DraftPreferenceAlignment {
+  slices: DraftPreferenceAlignmentSlice[];
+  bordaScore: number;
+}
+
+export interface DraftSupplyDemandEntry {
+  labId: string;
+  labName: string;
+  supplyShare: number;
+  demandShare: number;
+  actualShare: number;
+}
+
+export interface DraftSummaryChartData {
+  labDistribution: DraftLabDistributionEntry[];
+  preferenceAlignment: DraftPreferenceAlignment;
+  supplyVsDemand: DraftSupplyDemandEntry[];
+}
+
+export interface DraftPreferenceAlignmentRow {
+  preferenceRank: bigint | null;
+  totalRanked: number | null;
+  count: number;
+}
+
+export interface DraftLabBordaScore {
+  labId: string;
+  bordaScore: number;
+}

@@ -181,7 +181,7 @@ async function expectChartTooltipPoint(
   await expect(tooltip.locator('.font-mono')).toHaveText(String(expected.value));
 
   for (const metric of expected.hiddenMetrics ?? [])
-    await expect(tooltip).not.toContainText(metric);
+    await expect(tooltip.getByText(metric, { exact: true })).not.toBeVisible();
 }
 
 test.describe('Draft Lifecycle', () => {
@@ -1832,13 +1832,11 @@ test.describe('Draft Lifecycle', () => {
   });
 
   test.describe('Admin Finalized Breakdown', () => {
-    test('shows expected aggregate quota values', async ({ adminPage }) => {
+    test('shows expected stat card values', async ({ adminPage }) => {
       await adminPage.goto('/dashboard/drafts/1/');
 
       await expect(adminPage.locator('#stat-total-students')).toHaveText('8');
       await expect(adminPage.locator('#stat-participating-labs')).toHaveText('5');
-      await expect(adminPage.locator('#quota-interventions')).toHaveText('1');
-      await expect(adminPage.locator('#stat-lottery-assignments')).toHaveText('3');
     });
 
     test.describe('Draft Rounds Chart', () => {
@@ -1860,70 +1858,70 @@ test.describe('Draft Lifecycle', () => {
         const title = adminPage.locator('#draft-rounds-chart-title');
         const modeSelect = adminPage.locator('#draft-rounds-chart-mode');
 
-        await expect(title).toHaveText('Students assigned per phase');
+        await expect(title).toHaveText('Students Assigned per Phase');
         await expectChartTooltipPoint(adminPage, 0, {
           label: 'Round 1',
           metric: 'Assigned',
           value: 2,
-          hiddenMetrics: ['Not yet assigned', 'Remaining quota'],
+          hiddenMetrics: ['Not Yet Assigned', 'Remaining Quota'],
         });
         await expectChartTooltipPoint(adminPage, 1, {
           label: 'Round 2',
           metric: 'Assigned',
           value: 1,
-          hiddenMetrics: ['Not yet assigned', 'Remaining quota'],
+          hiddenMetrics: ['Not Yet Assigned', 'Remaining Quota'],
         });
         await expectChartTooltipPoint(adminPage, 2, {
           label: 'Round 3',
           metric: 'Assigned',
           value: 1,
-          hiddenMetrics: ['Not yet assigned', 'Remaining quota'],
+          hiddenMetrics: ['Not Yet Assigned', 'Remaining Quota'],
         });
         await expectChartTooltipPoint(adminPage, 3, {
           label: 'Interventions',
           metric: 'Assigned',
           value: 1,
-          hiddenMetrics: ['Not yet assigned', 'Remaining quota'],
+          hiddenMetrics: ['Not Yet Assigned', 'Remaining Quota'],
         });
         await expectChartTooltipPoint(adminPage, 4, {
           label: 'Lottery',
           metric: 'Assigned',
           value: 3,
-          hiddenMetrics: ['Not yet assigned', 'Remaining quota'],
+          hiddenMetrics: ['Not Yet Assigned', 'Remaining Quota'],
         });
 
         await modeSelect.selectOption('remaining');
 
-        await expect(title).toHaveText('Students not yet assigned per phase');
+        await expect(title).toHaveText('Students Not Yet Assigned per Phase');
         await expectChartTooltipPoint(adminPage, 0, {
           label: 'Round 1',
-          metric: 'Not yet assigned',
+          metric: 'Not Yet Assigned',
           value: 6,
-          hiddenMetrics: ['Assigned', 'Remaining quota'],
+          hiddenMetrics: ['Assigned', 'Remaining Quota'],
         });
         await expectChartTooltipPoint(adminPage, 1, {
           label: 'Round 2',
-          metric: 'Not yet assigned',
+          metric: 'Not Yet Assigned',
           value: 5,
-          hiddenMetrics: ['Assigned', 'Remaining quota'],
+          hiddenMetrics: ['Assigned', 'Remaining Quota'],
         });
         await expectChartTooltipPoint(adminPage, 2, {
           label: 'Round 3',
-          metric: 'Not yet assigned',
+          metric: 'Not Yet Assigned',
           value: 4,
-          hiddenMetrics: ['Assigned', 'Remaining quota'],
+          hiddenMetrics: ['Assigned', 'Remaining Quota'],
         });
         await expectChartTooltipPoint(adminPage, 3, {
           label: 'Interventions',
-          metric: 'Not yet assigned',
+          metric: 'Not Yet Assigned',
           value: 3,
-          hiddenMetrics: ['Assigned', 'Remaining quota'],
+          hiddenMetrics: ['Assigned', 'Remaining Quota'],
         });
         await expectChartTooltipPoint(adminPage, 4, {
           label: 'Lottery',
-          metric: 'Not yet assigned',
+          metric: 'Not Yet Assigned',
           value: 0,
-          hiddenMetrics: ['Assigned', 'Remaining quota'],
+          hiddenMetrics: ['Assigned', 'Remaining Quota'],
         });
       });
 
@@ -1946,9 +1944,6 @@ test.describe('Draft Lifecycle', () => {
 
         await labSelect.selectOption(selectedLab.value);
 
-        await expect(adminPage.locator('#draft-rounds-chart-lab-badge')).toHaveText(
-          selectedLab.label,
-        );
         await expect(chart).toContainText('R1');
         await expect(chart).toContainText('R2');
         await expect(chart).toContainText('R3');
@@ -1957,7 +1952,93 @@ test.describe('Draft Lifecycle', () => {
 
         await modeSelect.selectOption('remaining');
 
-        await expect(title).toHaveText('Labs remaining quota per phase');
+        await expect(title).toHaveText('Labs Remaining Quota per Phase');
+      });
+    });
+
+    test.describe('Supply Demand Chart', () => {
+      test('renders with all lab IDs and series legend', async ({ adminPage }) => {
+        await adminPage.goto('/dashboard/drafts/1/');
+        const chart = adminPage.locator('#supply-demand-chart');
+        await expect(chart).toBeVisible();
+
+        // Y-axis: all 5 lab IDs
+        await expect(chart).toContainText('NDSL');
+        await expect(chart).toContainText('CSL');
+        await expect(chart).toContainText('SCL');
+        await expect(chart).toContainText('CVMIL');
+        await expect(chart).toContainText('ACL');
+
+        // Legend: 3 grouped series
+        const legendItems = chart.locator('.lc-legend-swatch-button');
+        await expect(legendItems).toHaveCount(3);
+        await expect(chart).toContainText('Supply');
+        await expect(chart).toContainText('Demand');
+        await expect(chart).toContainText('Actual');
+      });
+
+      test('x-axis displays percentage labels', async ({ adminPage }) => {
+        await adminPage.goto('/dashboard/drafts/1/');
+        const chart = adminPage.locator('#supply-demand-chart');
+        await expect(chart).toContainText('0%');
+      });
+    });
+
+    test.describe('Lab Distribution Chart', () => {
+      test('renders with all five lab IDs in legend', async ({ adminPage }) => {
+        await adminPage.goto('/dashboard/drafts/1/');
+        const chart = adminPage.locator('#lab-distribution-chart');
+        await expect(chart).toBeVisible();
+
+        // All 8 students assigned across exactly 5 labs
+        const legendItems = chart.locator('.lc-legend-swatch-button');
+        await expect(legendItems).toHaveCount(5);
+        await expect(chart).toContainText('NDSL');
+        await expect(chart).toContainText('CSL');
+        await expect(chart).toContainText('SCL');
+        await expect(chart).toContainText('CVMIL');
+        await expect(chart).toContainText('ACL');
+      });
+
+      test('has no Unassigned slice', async ({ adminPage }) => {
+        await adminPage.goto('/dashboard/drafts/1/');
+        const chart = adminPage.locator('#lab-distribution-chart');
+        await expect(chart.getByText('Unassigned')).toHaveCount(0);
+      });
+    });
+
+    test.describe('Preference Alignment Chart', () => {
+      test('legend contains all deterministic preference slices', async ({ adminPage }) => {
+        await adminPage.goto('/dashboard/drafts/1/');
+        const chart = adminPage.locator('#preference-alignment-chart');
+        await expect(chart).toBeVisible();
+
+        // Always present regardless of lottery outcome:
+        // 1st Choice: Eager→NDSL, Patient→CSL
+        // 2nd Choice: PartialToDrafted→CSL
+        // 3rd Choice: Unlucky→NDSL
+        // Not Preferred: NoRank + IdleBystander (0 prefs)
+        await expect(chart).toContainText('1st Choice');
+        await expect(chart).toContainText('2nd Choice');
+        await expect(chart).toContainText('3rd Choice');
+        await expect(chart).toContainText('Not Preferred');
+      });
+
+      test('displays a valid Borda Score in the center overlay', async ({ adminPage }) => {
+        await adminPage.goto('/dashboard/drafts/1/');
+        const chart = adminPage.locator('#preference-alignment-chart');
+
+        await expect(chart).toContainText('Borda Score');
+
+        // d3-format('.0%') renders as "42%" etc.
+        const scoreEl = chart.locator('.text-3xl');
+        await expect(scoreEl).toHaveText(/^\d+%$/u);
+
+        // Verify range 0–100%
+        const scoreText = (await scoreEl.textContent())?.trim() ?? '';
+        const numeric = parseInt(scoreText.replace('%', ''), 10);
+        expect(numeric).toBeGreaterThanOrEqual(0);
+        expect(numeric).toBeLessThanOrEqual(100);
       });
     });
 
@@ -2697,10 +2778,6 @@ test.describe('Draft Lifecycle', () => {
 
       await expect(adminPage.locator('#stat-total-students')).toHaveText('3');
       await expect(adminPage.locator('#stat-participating-labs')).toHaveText('4');
-      await expect(adminPage.locator('#quota-interventions')).toHaveText('0');
-      await expect(adminPage.locator('#stat-lottery-assignments')).toHaveText('0');
-
-      await adminPage.goto('/dashboard/drafts/2/');
 
       await adminPage.getByRole('button', { name: 'See Drafted Students by Method' }).click();
       await adminPage.waitForLoadState('networkidle');

@@ -18,6 +18,7 @@ import {
   ne,
   or,
   sql,
+  sum,
 } from 'drizzle-orm';
 import { array, date, number, object, parse, string, union } from 'valibot';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -61,8 +62,17 @@ function coerceNullableDate(value: unknown) {
 }
 
 function coerceNumber(value: unknown) {
-  if (typeof value === 'number') return value;
-  throw new CoercionError('expected a number');
+  switch (typeof value) {
+    case 'number':
+      return value;
+    case 'string': {
+      const parsed = Number.parseFloat(value);
+      if (Number.isNaN(parsed)) throw new CoercionError(`expected a numeric string, got: ${value}`);
+      return parsed;
+    }
+    default:
+      throw new CoercionError('expected a number');
+  }
 }
 
 const isRegistrationClosed = lt(schema.draft.registrationClosedAt, sql`now()`)
@@ -2388,5 +2398,78 @@ export async function getDraftRegistrationTimeline(db: DbConnection, id: bigint)
       where: ({ draftId }, { eq }) => eq(draftId, id),
       orderBy: ({ createdAt }) => createdAt,
     });
+  });
+}
+
+export async function getLabDemandBordaScores(db: DbConnection, draftId: bigint) {
+  return await tracer.asyncSpan('get-lab-demand-borda-scores', async span => {
+    span.setAttribute('database.draft.id', draftId.toString());
+    const studentLabCount = db
+      .select({
+        draftId: schema.studentRankLab.draftId,
+        userId: schema.studentRankLab.userId,
+        n: count().as('n'),
+      })
+      .from(schema.studentRankLab)
+      .where(eq(schema.studentRankLab.draftId, draftId))
+      .groupBy(({ draftId, userId }) => [draftId, userId])
+      .as('student_lab_count');
+    return await db
+      .select({
+        labId: schema.studentRankLab.labId,
+        bordaScore: sum(sql`${studentLabCount.n} - ${schema.studentRankLab.index} + 1`).mapWith(
+          coerceNumber,
+        ),
+      })
+      .from(schema.studentRankLab)
+      .innerJoin(
+        studentLabCount,
+        and(
+          eq(schema.studentRankLab.draftId, studentLabCount.draftId),
+          eq(schema.studentRankLab.userId, studentLabCount.userId),
+        ),
+      )
+      .where(eq(schema.studentRankLab.draftId, draftId))
+      .groupBy(({ labId }) => labId);
+  });
+}
+
+export async function getDraftPreferenceAlignment(db: DbConnection, draftId: bigint) {
+  return await tracer.asyncSpan('get-draft-preference-alignment', async span => {
+    span.setAttribute('database.draft.id', draftId.toString());
+    const studentLabCount = db
+      .select({
+        draftId: schema.studentRankLab.draftId,
+        userId: schema.studentRankLab.userId,
+        n: count().as('n'),
+      })
+      .from(schema.studentRankLab)
+      .where(eq(schema.studentRankLab.draftId, draftId))
+      .groupBy(({ draftId, userId }) => [draftId, userId])
+      .as('student_lab_count');
+    return await db
+      .select({
+        preferenceRank: schema.studentRankLab.index,
+        totalRanked: studentLabCount.n,
+        count: count(),
+      })
+      .from(schema.facultyChoiceUser)
+      .leftJoin(
+        schema.studentRankLab,
+        and(
+          eq(schema.facultyChoiceUser.draftId, schema.studentRankLab.draftId),
+          eq(schema.facultyChoiceUser.studentUserId, schema.studentRankLab.userId),
+          eq(schema.facultyChoiceUser.labId, schema.studentRankLab.labId),
+        ),
+      )
+      .leftJoin(
+        studentLabCount,
+        and(
+          eq(schema.facultyChoiceUser.draftId, studentLabCount.draftId),
+          eq(schema.facultyChoiceUser.studentUserId, studentLabCount.userId),
+        ),
+      )
+      .where(eq(schema.facultyChoiceUser.draftId, draftId))
+      .groupBy(({ preferenceRank, totalRanked }) => [preferenceRank, totalRanked]);
   });
 }

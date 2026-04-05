@@ -54,7 +54,7 @@
   --chart-1: oklch(49.51% 0.12 154.86deg);
   --chart-2: oklch(77.15% 0.0813 159.02deg);
   --chart-3: oklch(65.83% 0.09 249.23deg);
-  --chart-4: oklch(65.6% 0.18 149.18deg);
+  --chart-4: oklch(84.973% 0.12312 114.334);
   --chart-5: oklch(82.33% 0.14 76.57deg);
 
   /* Sidebar */
@@ -112,9 +112,9 @@
 
   /* Charts */
   --chart-1: oklch(58.83% 0.11 159deg);
-  --chart-2: oklch(69.73% 0.0776 162.14deg);
-  --chart-3: oklch(72.68% 0.07 248.1deg);
-  --chart-4: oklch(69.81% 0.17 150.75deg);
+  --chart-2: oklch(78.639% 0.06016 162.503);
+  --chart-3: oklch(68.152% 0.07758 249.054);
+  --chart-4: oklch(84.973% 0.12312 114.334);
   --chart-5: oklch(84.79% 0.12 78.56deg);
 
   /* Sidebar */

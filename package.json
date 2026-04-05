@@ -56,7 +56,7 @@
     "inngest": "^4.1.2",
     "itertools": "^2.6.0",
     "jose": "^6.2.2",
-    "layerchart": "2.0.0-next.46",
+    "layerchart": "2.0.0-next.50",
     "mimetext": "^3.0.28",
     "mode-watcher": "^1.1.0",
     "multipart-ts": "^1.4.2",

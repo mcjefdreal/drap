@@ -31,7 +31,7 @@
         {#each Object.keys(researchersByRound)
           .map(Number)
           .toSorted((a, b) => a - b) as round (round)}
-          <Tabs.Trigger value={String(round)}>Round {round}</Tabs.Trigger>
+          <Tabs.Trigger value={round.toString()}>Round {round}</Tabs.Trigger>
         {/each}
       </Tabs.List>
       {#each Object.entries(researchersByRound) as [round, students = []] (round)}
