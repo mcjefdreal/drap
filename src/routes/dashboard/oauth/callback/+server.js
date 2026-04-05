@@ -102,22 +102,21 @@ export async function GET({ fetch, cookies, setHeaders, url: { searchParams } })
         error(500, 'Invalid email address provided by Google.');
       }
 
-      if (typeof ASSERT_DOMAIN !== 'undefined')
-        switch (email.type) {
-          case 'mailbox':
-            if (email.domain !== ASSERT_DOMAIN) {
-              logger.fatal('email address from external organization detected', void 0, {
-                'google.email': token.email,
-              });
-              error(500, `Email address must be from ${ASSERT_DOMAIN}.`);
-            }
-            break;
-          default:
-            logger.fatal('invalid email address type from Google', void 0, {
+      switch (email.type) {
+        case 'mailbox':
+          if (typeof ASSERT_DOMAIN !== 'undefined' && email.domain !== ASSERT_DOMAIN) {
+            logger.fatal('email address from external organization detected', void 0, {
               'google.email': token.email,
             });
-            error(500, 'Invalid email address type provided by Google.');
-        }
+            error(500, `Email address must be from ${ASSERT_DOMAIN}.`);
+          }
+          break;
+        default:
+          logger.fatal('invalid email address type from Google', void 0, {
+            'google.email': token.email,
+          });
+          error(500, 'Invalid email address type provided by Google.');
+      }
 
       // Validate nonce against the cookie
       const cookieNonce = Buffer.from(nonceCookie, 'base64url');
