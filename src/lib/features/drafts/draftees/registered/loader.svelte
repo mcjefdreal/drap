@@ -3,7 +3,7 @@
   import type { Snippet } from 'svelte';
 
   import DataTable from '$lib/features/drafts/draftees/data-table.svelte';
-  import Empty from '$lib/components/ui/empty/empty.svelte';
+  import Empty from '$lib/components/empty.svelte';
   import { createFetchDrafteesQuery } from '$lib/queries/fetch-draftees';
 
   export interface Props {
@@ -21,7 +21,10 @@
     <Loader2Icon class="size-20 animate-spin" />
   </div>
 {:else if query.isError}
-  <Empty>Uh oh! An error has occurred.</Empty>
+  <Empty variant="destructive">
+    {#snippet title()}Unable to Load Data{/snippet}
+    {#snippet description()}Uh oh! An error has occurred.{/snippet}
+  </Empty>
 {:else}
   <DataTable data={query.data} {children} />
 {/if}

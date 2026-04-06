@@ -7,7 +7,7 @@
 <script lang="ts">
   import Loader2Icon from '@lucide/svelte/icons/loader-2';
 
-  import Empty from '$lib/components/ui/empty/empty.svelte';
+  import Empty from '$lib/components/empty.svelte';
   import { createFetchDraftAllowlistQuery } from '$lib/queries/fetch-draft-allowlist';
 
   import AllowlistForm from './form.svelte';
@@ -22,7 +22,10 @@
     <Loader2Icon class="size-20 animate-spin" />
   </div>
 {:else if query.isError}
-  <Empty>Uh oh! An error has occurred.</Empty>
+  <Empty variant="destructive">
+    {#snippet title()}Unable to Load Data{/snippet}
+    {#snippet description()}Uh oh! An error has occurred.{/snippet}
+  </Empty>
 {:else}
   <AllowlistForm {draftId} allowlist={query.data} />
 {/if}

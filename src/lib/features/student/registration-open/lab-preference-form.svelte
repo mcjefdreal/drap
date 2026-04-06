@@ -16,7 +16,7 @@
   import { toast } from 'svelte-sonner';
 
   import * as Card from '$lib/components/ui/card';
-  import * as Empty from '$lib/components/ui/empty';
+  import Empty from '$lib/components/empty.svelte';
   import { assert } from '$lib/assert';
   import { Button } from '$lib/components/ui/button';
   import { enhance } from '$app/forms';
@@ -188,15 +188,13 @@
         </ul>
         {#if persistedAvailableLabs.current.length === 0}
           <div class="flex grow items-center justify-center">
-            <Empty.Root>
-              <Empty.Media variant="icon">
+            <Empty>
+              {#snippet icon()}
                 <InboxIcon />
-              </Empty.Media>
-              <Empty.Header>
-                <Empty.Title>No more labs available</Empty.Title>
-                <Empty.Description>There are no more labs remaining in the list.</Empty.Description>
-              </Empty.Header>
-            </Empty.Root>
+              {/snippet}
+              {#snippet title()}No more labs available{/snippet}
+              {#snippet description()}There are no more labs remaining in the list.{/snippet}
+            </Empty>
           </div>
         {/if}
       </Card.Content>
@@ -294,17 +292,15 @@
         </ol>
         {#if persistedSelectedLabs.current.length === 0}
           <div class="flex grow items-center justify-center">
-            <Empty.Root>
-              <Empty.Media variant="icon">
+            <Empty>
+              {#snippet icon()}
                 <BoxSelectIcon />
-              </Empty.Media>
-              <Empty.Header>
-                <Empty.Title>No labs selected</Empty.Title>
-                <Empty.Description>
-                  Click on a lab from the available list to add it to your ranking.
-                </Empty.Description>
-              </Empty.Header>
-            </Empty.Root>
+              {/snippet}
+              {#snippet title()}No labs selected{/snippet}
+              {#snippet description()}
+                Click on a lab from the available list to add it to your ranking.
+              {/snippet}
+            </Empty>
           </div>
         {/if}
       </Card.Content>

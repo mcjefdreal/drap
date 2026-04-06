@@ -1,7 +1,7 @@
 <script>
   import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 
-  import * as Empty from '$lib/components/ui/empty';
+  import Empty from '$lib/components/empty.svelte';
   import { Button } from '$lib/components/ui/button';
   import { page } from '$app/state';
 
@@ -9,32 +9,33 @@
 </script>
 
 <main class="flex min-h-full items-center justify-center px-6 py-12">
-  <Empty.Root
+  <Empty
     variant={status === 404 || status === 499 ? 'warning' : 'destructive'}
     class="w-full max-w-xl"
   >
-    <Empty.Media variant="icon">
+    {#snippet icon()}
       <TriangleAlertIcon class="size-5" />
-    </Empty.Media>
-    <Empty.Header>
+    {/snippet}
+    {#snippet title()}
       {#if status === 499}
-        <Empty.Title>No Active Draft</Empty.Title>
-        <Empty.Description>There is no active draft for this view yet.</Empty.Description>
+        No Active Draft
       {:else if status === 404}
-        <Empty.Title>Dashboard Page Not Found</Empty.Title>
-        <Empty.Description>The dashboard resource you requested does not exist.</Empty.Description>
-      {:else if error !== null}
-        <Empty.Title>Dashboard Error</Empty.Title>
-        <Empty.Description>{status}: {error.message}</Empty.Description>
+        Dashboard Page Not Found
       {:else}
-        <Empty.Title>Dashboard Error</Empty.Title>
-        <Empty.Description>
-          An unexpected error prevented this dashboard page from loading.
-        </Empty.Description>
+        Dashboard Error
       {/if}
-    </Empty.Header>
-    <Empty.Content>
-      <Button href="/dashboard/" variant="outline">Go to Dashboard</Button>
-    </Empty.Content>
-  </Empty.Root>
+    {/snippet}
+    {#snippet description()}
+      {#if status === 499}
+        There is no active draft for this view yet.
+      {:else if status === 404}
+        The dashboard resource you requested does not exist.
+      {:else if error === null}
+        An unexpected error prevented this dashboard page from loading.
+      {:else}
+        {status}: {error.message}
+      {/if}
+    {/snippet}
+    <Button href="/dashboard/" variant="outline">Go to Dashboard</Button>
+  </Empty>
 </main>
