@@ -21,7 +21,7 @@
 </script>
 
 {#if drafteesQuery.isPending || lateQuery.isPending}
-  <Empty.Root class="min-h-40 grow">
+  <Empty.Root>
     <Empty.Media>
       <Loader2Icon class="size-5 animate-spin text-muted-foreground" />
     </Empty.Media>
@@ -31,7 +31,7 @@
     </Empty.Header>
   </Empty.Root>
 {:else if drafteesQuery.isError || lateQuery.isError}
-  <Empty.Root class="min-h-40 grow">
+  <Empty.Root>
     <Empty.Media variant="icon">
       <UsersIcon class="size-5" />
     </Empty.Media>

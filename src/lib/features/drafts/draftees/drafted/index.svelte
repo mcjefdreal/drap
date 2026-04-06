@@ -23,8 +23,11 @@
       {/if}
     {/snippet}
   </Sheet.Trigger>
-  <Sheet.Content side="right" class="flex w-full flex-col overflow-hidden sm:max-w-[600px]">
-    <Sheet.Header>
+  <Sheet.Content
+    side="right"
+    class="flex w-full flex-col gap-4 overflow-hidden p-4 sm:max-w-[600px]"
+  >
+    <Sheet.Header class="shrink-0 p-0 pe-10">
       <Sheet.Title>
         {#if typeof loaderProps.lab === 'undefined'}
           Already Drafted
@@ -34,7 +37,7 @@
       </Sheet.Title>
       <Sheet.Description>Review students who have already been assigned.</Sheet.Description>
     </Sheet.Header>
-    <div class="flex min-h-0 grow flex-col overflow-y-auto px-4 pb-4">
+    <div class="flex min-h-0 grow flex-col">
       <Loader {...loaderProps} />
     </div>
   </Sheet.Content>

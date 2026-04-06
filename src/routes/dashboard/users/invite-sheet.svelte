@@ -34,8 +34,8 @@
       </Button>
     {/snippet}
   </Sheet.Trigger>
-  <Sheet.Content class="flex w-full flex-col overflow-hidden sm:max-w-md">
-    <Sheet.Header>
+  <Sheet.Content class="flex w-full flex-col gap-4 overflow-hidden p-4 sm:max-w-md">
+    <Sheet.Header class="shrink-0 p-0 pe-10">
       <Sheet.Title>
         {#if typeof labs === 'undefined'}
           Invite Draft Administrators
@@ -45,17 +45,17 @@
       </Sheet.Title>
       <Sheet.Description>Invite new users or view pending invitations.</Sheet.Description>
     </Sheet.Header>
-    <div class="flex min-h-0 grow flex-col overflow-y-auto px-4 pb-4">
-      <div class="mb-6 shrink-0">
+    <div class="flex min-h-0 grow flex-col gap-6">
+      <div class="shrink-0">
         {#if typeof labs === 'undefined'}
           <AdminForm />
         {:else}
           <FacultyForm {labs} />
         {/if}
       </div>
-      <div class="flex min-h-0 grow flex-col gap-4">
+      <div class="flex min-h-0 grow flex-col gap-4 overflow-y-auto">
         {#if query.isPending}
-          <Empty.Root class="min-h-40 grow">
+          <Empty.Root>
             <Empty.Media>
               <Loader2Icon class="size-5 animate-spin text-muted-foreground" />
             </Empty.Media>
@@ -65,7 +65,7 @@
             </Empty.Header>
           </Empty.Root>
         {:else if query.isError}
-          <Empty.Root class="min-h-40 grow">
+          <Empty.Root>
             <Empty.Media variant="icon">
               <UsersIcon class="size-5" />
             </Empty.Media>
@@ -75,7 +75,7 @@
             </Empty.Header>
           </Empty.Root>
         {:else if query.data.length === 0}
-          <Empty.Root class="min-h-40 grow">
+          <Empty.Root>
             <Empty.Media variant="icon">
               <UsersIcon class="size-5" />
             </Empty.Media>
