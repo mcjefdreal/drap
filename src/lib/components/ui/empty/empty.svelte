@@ -2,7 +2,7 @@
   import { tv, type VariantProps } from 'tailwind-variants';
 
   export const emptyRootVariants = tv({
-    base: 'bg-surface/40 flex min-w-0 grow flex-col items-center justify-center gap-6 rounded-lg border border-dashed p-6 text-center text-balance md:p-12',
+    base: 'flex min-w-0 grow flex-col items-center justify-center gap-6 rounded-lg border border-dashed p-6 text-center text-balance md:p-12',
     variants: {
       variant: {
         default: '',
