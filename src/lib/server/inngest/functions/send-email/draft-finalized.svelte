@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Heading, Section, Text } from 'better-svelte-email';
+  import { Button, Column, Heading, Img, Row, Section, Text } from 'better-svelte-email';
 
   import { ORIGIN } from '$lib/env';
 
@@ -10,12 +10,13 @@
     labName: string;
     studentName: string;
     studentEmail: string;
+    avatarUrl: string;
   }
 
   interface GroupedLotteryAssignment {
     labId: string;
     labName: string;
-    students: Pick<LotteryAssignment, 'studentName' | 'studentEmail'>[];
+    students: Pick<LotteryAssignment, 'studentName' | 'studentEmail' | 'avatarUrl'>[];
   }
 
   interface Props {
@@ -27,17 +28,17 @@
   const groupedLotteryAssignments = $derived.by(() => {
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- local grouping container in derived computation
     const grouped = new Map<string, GroupedLotteryAssignment>();
-    for (const { labId, labName, studentName, studentEmail } of lotteryAssignments) {
+    for (const { labId, labName, studentName, studentEmail, avatarUrl } of lotteryAssignments) {
       const existing = grouped.get(labId);
       if (typeof existing === 'undefined') {
         grouped.set(labId, {
           labId,
           labName,
-          students: [{ studentName, studentEmail }],
+          students: [{ studentName, studentEmail, avatarUrl }],
         });
         continue;
       }
-      existing.students.push({ studentName, studentEmail });
+      existing.students.push({ studentName, studentEmail, avatarUrl });
     }
     return Array.from(grouped.values()).sort((left, right) =>
       left.labId.localeCompare(right.labId),
@@ -64,9 +65,33 @@
             <Section class="my-3 rounded-md border border-muted px-3 py-2">
               <Text class="mb-2 text-sm font-semibold">{group.labName}</Text>
               {#each group.students as student (`${group.labId}:${student.studentEmail}`)}
-                <Text class="my-0 text-sm leading-relaxed">
-                  <a href="mailto:{student.studentEmail}">{student.studentName}</a>
-                </Text>
+                <Row class="my-2">
+                  <Column class="w-12 align-top">
+                    {#if student.avatarUrl.length > 0}
+                      <Img
+                        src={student.avatarUrl}
+                        alt={student.studentName}
+                        width="36"
+                        height="36"
+                        class="block rounded-full object-cover"
+                      />
+                    {:else}
+                      <Section class="m-0 size-9 rounded-full bg-secondary text-center">
+                        <Text class="m-0 text-xs font-semibold text-secondary-foreground">
+                          {student.studentName.trim()[0]?.toUpperCase() ?? '?'}
+                        </Text>
+                      </Section>
+                    {/if}
+                  </Column>
+                  <Column class="align-middle">
+                    <Text class="my-0 text-sm leading-relaxed font-medium">
+                      <a href="mailto:{student.studentEmail}">{student.studentName}</a>
+                    </Text>
+                    <Text class="my-0 text-xs leading-relaxed text-muted-foreground">
+                      {student.studentEmail}
+                    </Text>
+                  </Column>
+                </Row>
               {/each}
             </Section>
           {/each}

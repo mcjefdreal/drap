@@ -546,6 +546,7 @@ export const actions = {
               labName,
               studentName: `${student.givenName} ${student.familyName}`,
               studentEmail: student.email,
+              avatarUrl: student.avatarUrl,
               recipientEmail: email,
               recipientName: `${givenName} ${familyName}`,
             }),
@@ -737,11 +738,12 @@ export const actions = {
 
       const lotteryAssignments = assignments
         .filter(({ round }) => round === null)
-        .map(({ labId, labName, givenName, familyName, email }) => ({
+        .map(({ labId, labName, givenName, familyName, email, avatarUrl }) => ({
           labId,
           labName,
           studentName: `${givenName} ${familyName}`,
           studentEmail: email,
+          avatarUrl,
         }));
 
       await inngest.send(

@@ -18,6 +18,7 @@ import {
 } from '$lib/server/inngest/schema';
 import {
   getLabById,
+  getUserByEmail,
   getUserNameByEmail,
   impersonateUserBySessionId,
   insertDummySession,
@@ -368,10 +369,16 @@ export const actions = {
                 /* eslint-disable @typescript-eslint/init-declarations */
                 let studentGivenName: string;
                 let studentFamilyName: string;
+                let studentAvatarUrl: string;
                 /* eslint-enable @typescript-eslint/init-declarations */
                 try {
-                  ({ givenName: studentGivenName, familyName: studentFamilyName } =
-                    await getUserNameByEmail(db, parsed.studentEmail));
+                  const student = await getUserByEmail(db, parsed.studentEmail);
+                  if (typeof student === 'undefined') throw new AssertionError({ message: '' });
+                  ({
+                    givenName: studentGivenName,
+                    familyName: studentFamilyName,
+                    avatarUrl: studentAvatarUrl,
+                  } = student);
                 } catch (err) {
                   if (err instanceof AssertionError) {
                     logger.fatal('unknown student email', err);
@@ -402,6 +409,7 @@ export const actions = {
                     labName,
                     studentName: `${studentGivenName} ${studentFamilyName}`,
                     studentEmail: parsed.studentEmail,
+                    avatarUrl: studentAvatarUrl,
                     recipientEmail: parsed.recipientEmail,
                     recipientName: `${recipientGivenName} ${recipientFamilyName}`,
                   }),
@@ -442,10 +450,16 @@ export const actions = {
                   /* eslint-disable @typescript-eslint/init-declarations */
                   let studentGivenName: string;
                   let studentFamilyName: string;
+                  let studentAvatarUrl: string;
                   /* eslint-enable @typescript-eslint/init-declarations */
                   try {
-                    ({ givenName: studentGivenName, familyName: studentFamilyName } =
-                      await getUserNameByEmail(db, studentEmail));
+                    const student = await getUserByEmail(db, studentEmail);
+                    if (typeof student === 'undefined') throw new AssertionError({ message: '' });
+                    ({
+                      givenName: studentGivenName,
+                      familyName: studentFamilyName,
+                      avatarUrl: studentAvatarUrl,
+                    } = student);
                   } catch (err) {
                     if (err instanceof AssertionError) {
                       logger.fatal('unknown student email', err);
@@ -461,6 +475,7 @@ export const actions = {
                     labName,
                     studentName: `${studentGivenName} ${studentFamilyName}`,
                     studentEmail,
+                    avatarUrl: studentAvatarUrl,
                   });
                 }
 
