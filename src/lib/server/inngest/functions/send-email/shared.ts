@@ -1,7 +1,7 @@
-import Renderer, { toPlainText } from 'better-svelte-email/render';
 import type { ComponentProps } from 'svelte';
 import { createMimeMessage } from 'mimetext/node';
 import { NonRetriableError } from 'inngest';
+import { toPlainText } from 'better-svelte-email/render';
 
 import { db } from '$lib/server/database';
 import type {
@@ -32,6 +32,7 @@ import LotteryIntervened from './lottery-intervened.svelte';
 import RoundStarted from './round-started.svelte';
 import RoundSubmitted from './round-submitted.svelte';
 import UserAssigned from './user-assigned.svelte';
+import { emailRenderer } from './renderer';
 
 const SERVICE_NAME = 'inngest.functions.send-email';
 const logger = Logger.byName(SERVICE_NAME);
@@ -53,21 +54,6 @@ type RenderableEmailEvent =
   | { name: 'draft/user.assigned.email.batch'; data: UserAssignedBatchEmailSchema }
   | { name: 'draft/user.assigned.email.fallback'; data: UserAssignedFallbackEmailSchema };
 
-// Resolved hex equivalents of the oklch design tokens from `app.css` :root.
-const renderer = new Renderer({
-  theme: {
-    extend: {
-      colors: {
-        primary: { DEFAULT: '#087542', foreground: '#f2fdf0' },
-        secondary: { DEFAULT: '#96ceae', foreground: '#0d332b' },
-        foreground: '#121815',
-        muted: { DEFAULT: '#c2c9ce', foreground: '#444f47' },
-        card: { DEFAULT: '#e9eff3', foreground: '#36413a' },
-      },
-    },
-  },
-});
-
 export async function createEmailMessage(event: RenderableEmailEvent, sender: SenderIdentity) {
   /* eslint-disable @typescript-eslint/init-declarations */
   let recipient: string;
@@ -83,7 +69,7 @@ export async function createEmailMessage(event: RenderableEmailEvent, sender: Se
         event.data.round === null
           ? `[DRAP] Lottery Round for Draft #${event.data.draftId} has begun!`
           : `[DRAP] Round #${event.data.round} for Draft #${event.data.draftId} has begun!`;
-      html = await renderer.render(RoundStarted, {
+      html = await emailRenderer.render(RoundStarted, {
         props: {
           draftId: event.data.draftId,
           round: event.data.round,
@@ -96,7 +82,7 @@ export async function createEmailMessage(event: RenderableEmailEvent, sender: Se
       subject = event.data.isCreate
         ? `[DRAP] Acknowledgement from ${event.data.labId.toUpperCase()} for Round #${event.data.round} of Draft #${event.data.draftId}`
         : `[DRAP] Preference Update from ${event.data.labId.toUpperCase()} for Round #${event.data.round} of Draft #${event.data.draftId}`;
-      html = await renderer.render(RoundSubmitted, {
+      html = await emailRenderer.render(RoundSubmitted, {
         props: {
           labName: event.data.labName,
           round: event.data.round,
@@ -109,7 +95,7 @@ export async function createEmailMessage(event: RenderableEmailEvent, sender: Se
     case 'draft/lottery.intervened.email.fallback':
       recipient = event.data.recipientEmail;
       subject = `[DRAP] Lottery Intervention for ${event.data.labId.toUpperCase()} in Draft #${event.data.draftId}`;
-      html = await renderer.render(LotteryIntervened, {
+      html = await emailRenderer.render(LotteryIntervened, {
         props: {
           studentName: event.data.studentName,
           studentEmail: event.data.studentEmail,
@@ -122,7 +108,7 @@ export async function createEmailMessage(event: RenderableEmailEvent, sender: Se
     case 'draft/draft.finalized.email.fallback':
       recipient = event.data.recipientEmail;
       subject = `[DRAP] Draft #${event.data.draftId} Finalized`;
-      html = await renderer.render(DraftFinalized, {
+      html = await emailRenderer.render(DraftFinalized, {
         props: {
           draftId: event.data.draftId,
           lotteryAssignments: event.data.lotteryAssignments,
@@ -133,7 +119,7 @@ export async function createEmailMessage(event: RenderableEmailEvent, sender: Se
     case 'draft/user.assigned.email.fallback':
       recipient = event.data.userEmail;
       subject = `[DRAP] Assigned to ${event.data.labId.toUpperCase()}`;
-      html = await renderer.render(UserAssigned, {
+      html = await emailRenderer.render(UserAssigned, {
         props: {
           userName: event.data.userName,
           labName: event.data.labName,

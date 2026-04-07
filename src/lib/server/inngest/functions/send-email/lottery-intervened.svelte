@@ -15,10 +15,16 @@
 
 <EmailLayout preview="Manual assignment notification - Draft #{draftId}">
   <Section>
-    <Heading class="text-2xl font-bold text-foreground" as="h1">Manual Assignment Completed</Heading
-    >
-    <Section class="my-6 rounded-lg bg-card text-card-foreground">
-      <Section class="mx-auto max-w-md">
+    <Section class="p-4">
+      <Heading class="text-2xl font-bold text-foreground" as="h1"
+        >Manual Assignment Completed</Heading
+      >
+      <Text class="text-sm text-muted-foreground">
+        This assignment was made through administrative intervention during the lottery phase.
+      </Text>
+    </Section>
+    <Section class="px-4 pb-4">
+      <Section class="mx-auto max-w-md rounded-lg bg-card p-4 text-card-foreground">
         <Text class="font-semibold">Assignment Details</Text>
         <Text class="mt-2 text-base leading-relaxed">
           <strong>Student:</strong>
@@ -30,8 +36,5 @@
         </Text>
       </Section>
     </Section>
-    <Text class="text-sm text-muted-foreground">
-      This assignment was made through administrative intervention during the lottery phase.
-    </Text>
   </Section>
 </EmailLayout>

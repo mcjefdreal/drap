@@ -47,14 +47,16 @@
 
 <EmailLayout preview="Draft #{draftId} is finalized - View final assignments">
   <Section>
-    <Heading class="text-2xl font-bold text-foreground" as="h1">Draft Finalized</Heading>
-    <Text class="text-base">
-      Draft <strong class="text-foreground">#{draftId}</strong> has just been finalized. All registered
-      students have been assigned to their respective research labs.
-    </Text>
+    <Section class="p-4">
+      <Heading class="text-2xl font-bold text-foreground" as="h1">Draft Finalized</Heading>
+      <Text class="text-base">
+        Draft <strong class="text-foreground">#{draftId}</strong> has just been finalized. All registered
+        students have been assigned to their respective research labs.
+      </Text>
+    </Section>
     {#if groupedLotteryAssignments.length > 0}
-      <Section class="my-6 rounded-lg bg-card text-card-foreground">
-        <Section class="mx-auto max-w-md py-4">
+      <Section class="px-4 pb-4">
+        <Section class="mx-auto max-w-md rounded-lg bg-card p-4 text-card-foreground">
           <Heading class="text-lg font-semibold text-foreground" as="h2">
             Finalized Lottery Results
           </Heading>
@@ -71,8 +73,8 @@
         </Section>
       </Section>
     {/if}
-    <Section class="my-6 rounded-lg bg-secondary/30 text-secondary-foreground">
-      <Section class="mx-auto max-w-md">
+    <Section class="px-4 pb-4">
+      <Section class="mx-auto max-w-md rounded-lg bg-secondary/30 p-4 text-secondary-foreground">
         <Text class="text-sm">See the new roster of researchers through the lab module.</Text>
         <Button
           href="{ORIGIN}/dashboard/"
