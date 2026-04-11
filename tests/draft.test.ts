@@ -476,6 +476,16 @@ test.describe('Draft Lifecycle', () => {
       await expect(adminPage.getByText('Changes on this page')).not.toBeVisible();
     });
 
+    test('Archived Labs tab remains accessible during registration', async ({ adminPage }) => {
+      await adminPage.goto('/dashboard/labs/');
+
+      const archivedTab = adminPage.getByRole('tab', { name: /Archived Labs/u });
+      await expect(archivedTab).toBeEnabled();
+
+      await archivedTab.click();
+      await expect(adminPage.getByRole('tabpanel')).toContainText('No archived labs found.');
+    });
+
     test('Create Lab button is disabled', async ({ adminPage }) => {
       await adminPage.goto('/dashboard/labs/');
       await expect(adminPage.getByRole('button', { name: 'Create Lab' })).toBeDisabled();
