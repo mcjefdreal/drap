@@ -65,7 +65,12 @@
   const chartData = $derived(
     Array.from({ length: displayedRounds }, (_, roundIndex) => ({
       round: `Round ${roundIndex + 1}`,
-      ...Object.fromEntries(chart.labs.map(lab => [lab.id, lab.assignedByPhase[roundIndex] ?? 0])),
+      ...chart.labs.reduce<Record<string, number>>((roundData, lab) => {
+        const assigned = lab.assignedByPhase[roundIndex] ?? 0;
+        // Keep each round payload sparse so the shared band tooltip only renders visible stacks.
+        if (assigned > 0) roundData[lab.id] = assigned;
+        return roundData;
+      }, {}),
     })),
   );
 
