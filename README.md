@@ -29,7 +29,7 @@ flowchart TD
     end
 
     subgraph Production
-        HAProxy[HAProxy:80]
+        HAProxy[HAProxy:80/443]
         SvelteKit[DRAP:3000]
 
         Drizzle[DrizzleGateway:4983]
@@ -66,7 +66,7 @@ flowchart TD
 
 ### Environment Variables
 
-Development and production do not use the same environment-variable surface. The tables below split host-run app processes such as `pnpm dev`, `pnpm preview`, and `node --env-file=.env build/index.js` from the full production compose stack started by `pnpm docker:app`.
+Development and production do not use the same environment-variable surface. The tables below split host-run app processes such as `pnpm dev`, `pnpm preview`, and `node --env-file=.env build/index.js` from the full production compose stack started by `pnpm docker:prod:app`.
 
 <details>
 <summary><strong>Development</strong></summary>
@@ -92,7 +92,7 @@ For host-run app processes, `pnpm docker:dev` already starts PostgreSQL, Inngest
 <details>
 <summary><strong>Production</strong></summary>
 
-For `pnpm docker:app`, Compose derives the canonical origin from `SCHEME` and `HOST` and injects several internal defaults on your behalf.
+For `pnpm docker:prod:app`, Compose derives the canonical origin from `SCHEME` and `HOST` and injects several internal defaults on your behalf. Use `pnpm docker:prod:app:tls` to add the TLS ingress override on top of the app stack.
 
 | **Variable**                 | **Used by**                                 | **Required** | **Recommended**                                              |
 | ---------------------------- | ------------------------------------------- | ------------ | ------------------------------------------------------------ |
@@ -109,14 +109,16 @@ For `pnpm docker:app`, Compose derives the canonical origin from `SCHEME` and `H
 | `ZO_ROOT_USER_PASSWORD`      | OpenObserve bootstrap admin password.       | Yes          | Use a strong random secret.                                  |
 | `DRIZZLE_MASTERPASS`         | Drizzle Gateway admin password.             | Yes          | Use a strong random secret.                                  |
 
-`pnpm docker:app` already injects `POSTGRES_URL`, `DRAP_ASSERT_DOMAIN`, `DRAP_ENABLE_EMAILS`, `INNGEST_BASE_URL`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_PROTOCOL`, `ADDRESS_HEADER`, and `XFF_DEPTH` internally.
+`pnpm docker:prod:app` already injects `POSTGRES_URL`, `DRAP_ASSERT_DOMAIN`, `DRAP_ENABLE_EMAILS`, `INNGEST_BASE_URL`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_PROTOCOL`, `ADDRESS_HEADER`, and `XFF_DEPTH` internally.
+
+When `SCHEME=https`, [`compose.prod.app.tls.yaml`](/X:/projects/drap/compose.prod.app.tls.yaml) expects a repo-root [`certificate.pem`](/X:/projects/drap/certificate.pem). A symlink is acceptable. The TLS override exposes it to HAProxy as a Docker secret mounted at `/run/secrets/certificate.pem`, and HAProxy will fail to start if the file is missing or malformed. HAProxy's static config files are baked into the image at build time, so changes to [`docker/haproxy/haproxy.cfg`](/X:/projects/drap/docker/haproxy/haproxy.cfg) or [`docker/haproxy/allowed-paths.lst`](/X:/projects/drap/docker/haproxy/allowed-paths.lst) require rebuilding the HAProxy image.
 
 </details>
 
 [Google Cloud Console]: https://console.cloud.google.com/
 
 > [!IMPORTANT]
-> The OAuth redirect URI is computed as `${ORIGIN}/dashboard/oauth/callback`. In the production compose stack, `ORIGIN` and `PUBLIC_ORIGIN` are both derived from `SCHEME` and `HOST`.
+> The OAuth redirect URI is computed as `${ORIGIN}/dashboard/oauth/callback`. In the production compose stack, `ORIGIN` and `PUBLIC_ORIGIN` are both derived from `SCHEME` and `HOST`. When `SCHEME=https`, HAProxy terminates TLS on port `443`, redirects port `80` to `HTTPS`, and emits HSTS on `HTTPS` responses.
 
 [`compose.yaml`]: ./compose.yaml
 
@@ -181,24 +183,26 @@ flowchart TD
     end
 
     subgraph Continuous Integration
-        ci[compose.ci.yaml]
+        ci[compose.dev.ci.yaml]
     end
 
     subgraph Production
         prod[compose.prod.yaml]
-        app[compose.app.yaml]
+        app[compose.prod.app.yaml]
+        tls[compose.prod.app.tls.yaml]
     end
 
     base --> dev --> ci
-    base --> prod --> app
+    base --> prod --> app --> tls
 ```
 
-| Command            | Files                                                     | Services                                                                              |
-| ------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `pnpm docker:dev`  | `compose.yaml` + `compose.dev.yaml`                       | base services plus dev overrides, including `o2`                                      |
-| `pnpm docker:ci`   | `compose.yaml` + `compose.dev.yaml` + `compose.ci.yaml`   | dev-style backing services with CI Inngest SDK URL override, excluding `o2` via reset |
-| `pnpm docker:prod` | `compose.yaml` + `compose.prod.yaml`                      | `postgres` (prod), `inngest` (prod), `redis`, `o2`, `drizzle-gateway`                 |
-| `pnpm docker:app`  | `compose.yaml` + `compose.prod.yaml` + `compose.app.yaml` | prod services + `haproxy` ingress + `app` + `migrate`                                 |
+| Command                    | Files                                                                                        | Services                                                                              |
+| -------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `pnpm docker:dev`          | `compose.yaml` + `compose.dev.yaml`                                                          | base services plus dev overrides, including `o2`                                      |
+| `pnpm docker:dev:ci`       | `compose.yaml` + `compose.dev.yaml` + `compose.dev.ci.yaml`                                  | dev-style backing services with CI Inngest SDK URL override, excluding `o2` via reset |
+| `pnpm docker:prod`         | `compose.yaml` + `compose.prod.yaml`                                                         | `postgres` (prod), `inngest` (prod), `redis`, `o2`, `drizzle-gateway`                 |
+| `pnpm docker:prod:app`     | `compose.yaml` + `compose.prod.yaml` + `compose.prod.app.yaml`                               | prod services + `haproxy` ingress + `app` + `migrate`                                 |
+| `pnpm docker:prod:app:tls` | `compose.yaml` + `compose.prod.yaml` + `compose.prod.app.yaml` + `compose.prod.app.tls.yaml` | app stack + TLS ingress override on port `443`                                        |
 
 > [!NOTE]
 > Docker BuildKit is required to build the local services used during development. In most platforms, Docker Desktop bundles the core Docker Engine with Docker BuildKit. For others (e.g., Arch Linux), a separate `docker-buildx`-like package must be installed.
@@ -236,13 +240,20 @@ pnpm docker:prod
 ```
 
 ```bash
-# Or, spin up full production environment (+ compose.app.yaml):
+# Or, spin up full production environment (+ compose.prod.app.yaml):
 # prod services + HAProxy ingress + app + migrate
-# requires the production variables listed above
-pnpm docker:app
+# SCHEME=http uses port 80 only
+pnpm docker:prod:app
 ```
 
-The production HAProxy ingress uses a coarse path allowlist for the public site surface (`/`, `/_app/`, `/history`, `/privacy`, `/dashboard`, and root static files). Any other unmatched path is returned as an empty `404` while rate-limited requests are returned as an empty `429`. Empty responses are preferred to conserve egress bandwidth.
+```bash
+# Or, add the TLS ingress override:
+# requires repo-root ./certificate.pem when SCHEME=https
+# symlink is acceptable
+pnpm docker:prod:app:tls
+```
+
+The production HAProxy ingress uses a coarse path allowlist for the public site surface (`/`, `/_app/`, `/history`, `/privacy`, `/dashboard`, and root static files). Any other unmatched path is returned as an empty `404` while rate-limited requests are returned as an empty `429`. Empty responses are preferred to conserve egress bandwidth. When the TLS override is enabled with `SCHEME=https`, HAProxy terminates TLS on port `443`, redirects valid host traffic from port `80` to `HTTPS`, and emits `Strict-Transport-Security` on `HTTPS` responses.
 
 ### Local Telemetry with OpenObserve
 
@@ -269,7 +280,7 @@ The Playwright configuration runs `pnpm preview` on port `4173` in production mo
 pnpm docker:dev
 ```
 
-In CI, use `pnpm docker:ci` so `inngest dev` can reach `pnpm preview` on port `4173`.
+In CI, use `pnpm docker:dev:ci` so `inngest dev` can reach `pnpm preview` on port `4173`.
 
 ```bash
 # Build first (required by playwright.config.js webServer command).
