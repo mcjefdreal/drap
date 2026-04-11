@@ -936,21 +936,19 @@ test.describe('Draft Lifecycle', () => {
     test('View System Logs opens the regular-round drawer', async ({ adminPage }) => {
       await adminPage.goto('/dashboard/drafts/1/');
 
-      await expectDrawerContents(
-        adminPage,
-        'View System Logs',
-        [/System Logs/u, /Show System Automation Logs/u],
-      );
+      await expectDrawerContents(adminPage, 'View System Logs', [
+        /System Logs/u,
+        /Show System Automation Logs/u,
+      ]);
     });
 
     test('View Undrafted opens the regular-round drawer', async ({ adminPage }) => {
       await adminPage.goto('/dashboard/drafts/1/');
 
-      await expectDrawerContents(
-        adminPage,
-        'View Undrafted',
-        [/Undrafted Students/u, /Select at least one lab to view students\./u],
-      );
+      await expectDrawerContents(adminPage, 'View Undrafted', [
+        /Undrafted Students/u,
+        /Select at least one lab to view students\./u,
+      ]);
     });
 
     test('switching to already drafted does not refetch after initial load', async ({
