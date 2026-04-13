@@ -8,7 +8,10 @@ services:
     pull_policy: build
     build: ./docker/haproxy
     ports:
-      - 80:80
+      - host_ip: 0.0.0.0
+        published: 80
+        target: 80
+        protocol: tcp
     environment:
       HOST: ${HOST:?required}
       SCHEME: ${SCHEME:?required}

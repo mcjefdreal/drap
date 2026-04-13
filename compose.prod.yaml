@@ -61,7 +61,10 @@ services:
   drizzle-gateway:
     image: ghcr.io/drizzle-team/gateway:1.2.0
     ports:
-      - 4983:4983
+      - host_ip: 127.0.0.1
+        published: 4983
+        target: 4983
+        protocol: tcp
     environment:
       PORT: 4983
       STORE_PATH: /app

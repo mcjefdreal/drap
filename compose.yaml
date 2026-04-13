@@ -6,7 +6,10 @@ services:
     pull_policy: build
     build: ./docker/postgres
     ports:
-      - 5432:5432
+      - host_ip: 127.0.0.1
+        published: 5432
+        target: 5432
+        protocol: tcp
     volumes:
       - postgres:/var/lib/postgresql/data
     networks:
@@ -27,7 +30,10 @@ services:
     networks:
       - queue
     ports:
-      - 8288:8288
+      - host_ip: 127.0.0.1
+        published: 8288
+        target: 8288
+        protocol: tcp
     restart: always
     healthcheck:
       test:
@@ -46,7 +52,10 @@ services:
     environment:
       ZO_DATA_DIR: /data
     ports:
-      - 5080:5080
+      - host_ip: 127.0.0.1
+        published: 5080
+        target: 5080
+        protocol: tcp
     volumes:
       - open-observe:/data
     networks:
@@ -63,10 +72,17 @@ services:
       start_period: 20s
 
   rustfs:
-    image: rustfs/rustfs:1.0.0-alpha.72
+    pull_policy: build
+    build: ./docker/rustfs
     ports:
-      - 9000:9000
-      - 9001:9001
+      - host_ip: 127.0.0.1
+        published: 9000
+        target: 9000
+        protocol: tcp
+      - host_ip: 127.0.0.1
+        published: 9001
+        target: 9001
+        protocol: tcp
     volumes:
       - rustfs-data:/data
       - rustfs-logs:/logs
