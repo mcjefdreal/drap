@@ -51,6 +51,10 @@ flowchart TD
         subgraph telemetry [telemetry]
             O2[OpenObserve:5080]
         end
+
+        subgraph storage [storage]
+            RustFS[RustFS:9000/9001]
+        end
     end
 
     User <--> HAProxy
@@ -61,6 +65,7 @@ flowchart TD
     SvelteKit -.->|OpenTelemetry| O2
     Inngest <--> Redis
     Inngest <--> SQLite
+    SvelteKit <--> RustFS
     Drizzle <--> Postgres
 ```
 
@@ -207,9 +212,9 @@ flowchart TD
 
 | Command                    | Files                                                                                        | Services                                                                              |
 | -------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `pnpm docker:dev`          | `compose.yaml` + `compose.dev.yaml`                                                          | base services plus dev overrides, including `o2`                                      |
+| `pnpm docker:dev`          | `compose.yaml` + `compose.dev.yaml`                                                          | base services plus dev overrides, including `o2` and `rustfs`                         |
 | `pnpm docker:dev:ci`       | `compose.yaml` + `compose.dev.yaml` + `compose.dev.ci.yaml`                                  | dev-style backing services with CI Inngest SDK URL override, excluding `o2` via reset |
-| `pnpm docker:prod`         | `compose.yaml` + `compose.prod.yaml`                                                         | `postgres` (prod), `inngest` (prod), `redis`, `o2`, `drizzle-gateway`                 |
+| `pnpm docker:prod`         | `compose.yaml` + `compose.prod.yaml`                                                         | `postgres` (prod), `inngest` (prod), `redis`, `o2`, `rustfs`, `drizzle-gateway`       |
 | `pnpm docker:prod:app`     | `compose.yaml` + `compose.prod.yaml` + `compose.prod.app.yaml`                               | prod services + `haproxy` ingress + `app` + `migrate`                                 |
 | `pnpm docker:prod:app:tls` | `compose.yaml` + `compose.prod.yaml` + `compose.prod.app.yaml` + `compose.prod.app.tls.yaml` | app stack + TLS ingress override on port `443`                                        |
 
@@ -222,7 +227,7 @@ flowchart TD
 
 ```bash
 # Run dev services (compose.yaml + compose.dev.yaml):
-# postgres, inngest (dev mode), o2
+# postgres, inngest (dev mode), o2, rustfs
 pnpm docker:dev
 
 # Run the Vite dev server for SvelteKit.
@@ -244,7 +249,7 @@ node --env-file=.env build/index.js
 
 ```bash
 # Or, spin up production internal services (compose.yaml + compose.prod.yaml):
-# postgres (prod), inngest (prod mode), redis, o2, drizzle-gateway
+# postgres (prod), inngest (prod mode), redis, o2, rustfs, drizzle-gateway
 pnpm docker:prod
 ```
 

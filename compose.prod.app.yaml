@@ -95,6 +95,7 @@ services:
       - database
       - durability
       - edge
+      - storage
       - telemetry
     depends_on:
       postgres:
