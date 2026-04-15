@@ -1,7 +1,25 @@
-# App service layered on top of the production internal services.
+# App and ingress services layered on top of the production internal services.
 # Extends: compose.prod.yaml
 
+x-public-origin: &public-origin ${SCHEME:?required}://${HOST:?required}
+
 services:
+  haproxy:
+    pull_policy: build
+    build: ./docker/haproxy
+    ports:
+      - 80:80
+    environment:
+      HOST: ${HOST:?required}
+      SCHEME: ${SCHEME:?required}
+    networks:
+      - edge
+    depends_on:
+      app:
+        condition: service_started
+        required: true
+    restart: always
+
   inngest:
     command:
       - inngest
@@ -56,14 +74,13 @@ services:
     build:
       context: .
       target: deploy
-    ports:
-      - 3000:3000
     environment:
+      ADDRESS_HEADER: X-Forwarded-For
       DRAP_ASSERT_DOMAIN: up.edu.ph
       DRAP_ENABLE_EMAILS: 1
       DRAP_ENCRYPTION_KEY: ${DRAP_ENCRYPTION_KEY:?required}
-      ORIGIN: ${ORIGIN:?required}
-      PUBLIC_ORIGIN: ${ORIGIN:?required}
+      ORIGIN: *public-origin
+      PUBLIC_ORIGIN: *public-origin
       POSTGRES_URL: postgresql://postgres:${POSTGRES_PASSWORD:?required}@postgres:5432/postgres
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:?required}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:?required}
@@ -73,9 +90,11 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://o2:5080/api/default
       OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:?required}
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      XFF_DEPTH: 1
     networks:
       - database
       - durability
+      - edge
       - telemetry
     depends_on:
       postgres:
@@ -88,3 +107,4 @@ services:
 
 networks:
   durability:
+  edge:

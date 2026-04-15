@@ -29,12 +29,16 @@ const tracer = Tracer.byName(SERVICE_NAME);
 /** Hoisted to the top level so that {@linkcode createRemoteJWKSet} can reuse it. */
 const GOOGLE_JWKS_CACHE = Object.create(null);
 export async function GET({ fetch, cookies, setHeaders, url: { searchParams } }) {
+  setHeaders({
+    'Cache-Control': 'private, no-store, no-cache, max-age=0, must-revalidate',
+    Pragma: 'no-cache',
+    Expires: '0',
+  });
+
   const fetchJwks = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'), {
     [jwksCache]: GOOGLE_JWKS_CACHE,
     [customFetch]: fetch,
   });
-
-  setHeaders({ 'Cache-Control': 'no-store' });
 
   const nonceCookie = cookies.get('nonce');
   if (typeof nonceCookie === 'undefined') {
