@@ -246,7 +246,8 @@ async function getDraftStatsAggregates(db: DbConnection) {
               draftedStudents: 0,
             });
 
-          const lab = labsMap.get(labId)!;
+          const lab = labsMap.get(labId);
+          if (!lab) throw new Error(`expected lab ${labId} in labsMap`);
           lab.quota += quotaData.quota;
           lab.draftedStudents += draftedData?.count ?? 0;
         }
