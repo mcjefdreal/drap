@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Area, AreaChart, LinearGradient } from 'layerchart';
+  import { AreaChart } from 'layerchart';
   import { cubicOut } from 'svelte/easing';
   import { tickStep } from 'd3-array';
   import { format } from 'd3-format';
@@ -20,7 +20,8 @@
 
   const { stats, labs }: Props = $props();
 
-  let selectedLabId = $state('');
+  let quotaSelectedLabId = $state('');
+  let draftedSelectedLabId = $state('');
   let chartData = $state<DraftStatsChartData | null>(null);
 
   $effect(() => {
@@ -41,16 +42,16 @@
         },
   );
 
-  const filteredSeries = $derived.by(() => {
+  const quotaFilteredSeries = $derived.by(() => {
     if (!chartData) return [];
-    if (selectedLabId === '') return chartData.quotaSeries;
-    return chartData.quotaSeries.filter(s => s.labId === selectedLabId);
+    if (quotaSelectedLabId === '') return chartData.quotaSeries;
+    return chartData.quotaSeries.filter(s => s.labId === quotaSelectedLabId);
   });
 
   const draftedFilteredSeries = $derived.by(() => {
     if (!chartData) return [];
-    if (selectedLabId === '') return chartData.draftedSeries;
-    return chartData.draftedSeries.filter(s => s.labId === selectedLabId);
+    if (draftedSelectedLabId === '') return chartData.draftedSeries;
+    return chartData.draftedSeries.filter(s => s.labId === draftedSelectedLabId);
   });
 
   function buildWideData(series: DraftStatsSeries[], years: number[]) {
@@ -65,8 +66,8 @@
   }
 
   const quotaChartData = $derived.by(() => {
-    if (!chartData || filteredSeries.length === 0) return [];
-    return buildWideData(filteredSeries, chartData.years);
+    if (!chartData || quotaFilteredSeries.length === 0) return [];
+    return buildWideData(quotaFilteredSeries, chartData.years);
   });
 
   const draftedChartData = $derived.by(() => {
@@ -76,7 +77,7 @@
 
   const quotaConfig = $derived(() => {
     const config: Record<string, { label: string; color: string }> = {};
-    for (const series of filteredSeries) {
+    for (const series of quotaFilteredSeries) {
       config[series.labId] = { label: series.labName, color: series.color };
     }
     return config;
@@ -93,7 +94,7 @@
   const quotaMax = $derived.by(() => {
     let max = 0;
     for (const point of quotaChartData) {
-      for (const series of filteredSeries) {
+      for (const series of quotaFilteredSeries) {
         const val = point[series.labId];
         if (typeof val === 'number' && val > max) max = val;
       }
@@ -140,7 +141,7 @@
           Historical quota snapshots by lab. Lines stop when labs are archived.
         </Card.Description>
       </div>
-      <NativeSelect.Root bind:value={selectedLabId} class="w-full bg-background/80 sm:w-auto lg:shrink-0">
+      <NativeSelect.Root bind:value={quotaSelectedLabId} class="w-full bg-background/80 sm:w-auto lg:shrink-0">
         <NativeSelect.Option value="">All Labs</NativeSelect.Option>
         {#each labs as lab (lab.id)}
           <NativeSelect.Option value={lab.id}>{lab.name}</NativeSelect.Option>
@@ -163,13 +164,15 @@
           data={quotaChartData}
           x="year"
           xScale={scalePoint().padding(0)}
-          padding={{ top: 8, right: 10, bottom: 20, left: 40 }}
-          series={getSeriesProps(filteredSeries)}
+          padding={{ top: 8, right: 10, bottom: 50, left: 40 }}
+          series={getSeriesProps(quotaFilteredSeries)}
           legend={true}
+          points
           grid
           yDomain={[0, quotaMax]}
           props={{
             area: { fillOpacity: 0.15, motion: chartMotion },
+            points: { r: 4, class: 'fill-current' },
             tooltip: { context: { mode: 'band' } },
             xAxis: { grid: false, format: yearFormat, motion: axisMotion, tickLabelProps: { dy: 8 } },
             yAxis: { ticks: yTicksFn(quotaMax), format: integerFormat, motion: axisMotion, tickLabelProps: { dx: -8 } },
@@ -184,47 +187,57 @@
   </Card.Content>
 </Card.Root>
 
-{#if chartData && chartData.years.length > 1}
-  <Card.Root class="overflow-hidden border-border/60 bg-linear-to-br from-muted/40 via-background to-muted/10 shadow-xs">
-    <Card.Header>
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div class="space-y-1.5 lg:grow">
-          <Card.Title>Drafted Students Through the Years</Card.Title>
-          <Card.Description>
-            Number of students drafted per lab over time.
-          </Card.Description>
-        </div>
+<Card.Root class="overflow-hidden border-border/60 bg-linear-to-br from-muted/40 via-background to-muted/10 shadow-xs">
+  <Card.Header>
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="space-y-1.5 lg:grow">
+        <Card.Title>Drafted Students Through the Years</Card.Title>
+        <Card.Description>
+          Number of students drafted per lab over time.
+        </Card.Description>
       </div>
-    </Card.Header>
-    <Card.Content class="pt-0">
-      {#if !chartData}
-        <div class="flex h-80 w-full items-center justify-center">
-          <Skeleton class="h-full w-full" />
-        </div>
-      {:else}
-        <Chart.Container config={draftedConfig()} class="h-80 w-full">
-          <AreaChart
-            data={draftedChartData}
-            x="year"
-            xScale={scalePoint().padding(0)}
-            padding={{ top: 8, right: 10, bottom: 20, left: 40 }}
-            series={getSeriesProps(draftedFilteredSeries)}
-            legend={true}
-            grid
-            yDomain={[0, draftedMax]}
-            props={{
-              area: { fillOpacity: 0.15, motion: chartMotion },
-              tooltip: { context: { mode: 'band' } },
-              xAxis: { grid: false, format: yearFormat, motion: axisMotion, tickLabelProps: { dy: 8 } },
-              yAxis: { ticks: yTicksFn(draftedMax), format: integerFormat, motion: axisMotion, tickLabelProps: { dx: -8 } },
-            }}
-          >
-            {#snippet tooltip()}
-              <Chart.Tooltip indicator="dot" />
-            {/snippet}
-          </AreaChart>
-        </Chart.Container>
-      {/if}
-    </Card.Content>
-  </Card.Root>
-{/if}
+      <NativeSelect.Root bind:value={draftedSelectedLabId} class="w-full bg-background/80 sm:w-auto lg:shrink-0">
+        <NativeSelect.Option value="">All Labs</NativeSelect.Option>
+        {#each labs as lab (lab.id)}
+          <NativeSelect.Option value={lab.id}>{lab.name}</NativeSelect.Option>
+        {/each}
+      </NativeSelect.Root>
+    </div>
+  </Card.Header>
+  <Card.Content class="pt-0">
+    {#if !chartData}
+      <div class="flex h-80 w-full items-center justify-center">
+        <Skeleton class="h-full w-full" />
+      </div>
+    {:else if draftedChartData.length === 0}
+      <div class="flex h-80 w-full items-center justify-center text-muted-foreground">
+        No data available
+      </div>
+    {:else}
+      <Chart.Container config={draftedConfig()} class="h-80 w-full">
+        <AreaChart
+          data={draftedChartData}
+          x="year"
+          xScale={scalePoint().padding(0)}
+          padding={{ top: 8, right: 10, bottom: 50, left: 40 }}
+          series={getSeriesProps(draftedFilteredSeries)}
+          legend={true}
+          points
+          grid
+          yDomain={[0, draftedMax]}
+          props={{
+            area: { fillOpacity: 0.15, motion: chartMotion },
+            points: { r: 4, class: 'fill-current' },
+            tooltip: { context: { mode: 'band' } },
+            xAxis: { grid: false, format: yearFormat, motion: axisMotion, tickLabelProps: { dy: 8 } },
+            yAxis: { ticks: yTicksFn(draftedMax), format: integerFormat, motion: axisMotion, tickLabelProps: { dx: -8 } },
+          }}
+        >
+          {#snippet tooltip()}
+            <Chart.Tooltip indicator="dot" />
+          {/snippet}
+        </AreaChart>
+      </Chart.Container>
+    {/if}
+  </Card.Content>
+</Card.Root>
