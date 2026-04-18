@@ -1,8 +1,7 @@
 import * as v from 'valibot';
+import { asc, count, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import { decode } from 'decode-formdata';
 import { error, redirect } from '@sveltejs/kit';
-import { index } from 'd3-array';
-import { count, eq, isNull, sql } from 'drizzle-orm';
 
 import * as schema from '$lib/server/database/schema';
 import { assertSingle } from '$lib/server/assert';
@@ -12,7 +11,6 @@ import {
   type DbConnection,
   type DrizzleTransaction,
   getDrafts,
-  getLabRegistry,
 } from '$lib/server/database/drizzle';
 import { Logger } from '$lib/server/telemetry/logger';
 import { Tracer } from '$lib/server/telemetry/tracer';
@@ -48,18 +46,17 @@ export async function load({ locals: { session } }) {
       'session.user.id': userId,
     });
 
-    const [drafts, labs, draftStatsByYear] = await Promise.all([
+    const [drafts, draftStatsRecords] = await Promise.all([
       getDrafts(db),
-      getLabRegistry(db),
-      getDraftStatsAggregates(db),
+      getDraftStatsRecords(db),
     ]);
 
     logger.debug('drafts page loaded', {
       'draft.count': drafts.length,
-      'lab.count': labs.length,
+      'draft.stats.record_count': draftStatsRecords.length,
     });
 
-    return { drafts, labs, draftStatsByYear };
+    return { drafts, draftStatsRecords };
   });
 }
 
@@ -157,104 +154,36 @@ async function initDraft(db: DrizzleTransaction, maxRounds: number, registration
   });
 }
 
-async function getDraftStatsAggregates(db: DbConnection) {
-  return await tracer.asyncSpan('get-draft-stats-aggregates', async () => {
-    const draftYears = await db
+async function getDraftStatsRecords(db: DbConnection) {
+  return await tracer.asyncSpan('get-draft-stats-records', async () => {
+    const draftedCounts = db.$with('_drafted_counts').as(
+      db
+        .select({
+          draftId: schema.facultyChoiceUser.draftId,
+          labId: schema.facultyChoiceUser.labId,
+          draftedStudents: sql`${count(schema.facultyChoiceUser.studentUserId)}`
+            .mapWith(coerceNumber)
+            .as('_drafted_students'),
+        })
+        .from(schema.facultyChoiceUser)
+        .groupBy(({ draftId, labId }) => [draftId, labId]),
+    );
+    return await db
+      .with(draftedCounts)
       .select({
-        draftId: schema.draft.id,
-        year: sql`extract(year from lower(${schema.draft.activePeriod}))`
-          .mapWith(coerceNumber)
-          .as('year'),
-      })
-      .from(schema.draft)
-      .where(sql`upper(${schema.draft.activePeriod}) is not null`);
-    if (draftYears.length === 0) return [];
-
-    const quotaSnapshots = await db
-      .select({
-        draftId: schema.draftLabQuota.draftId,
-        labId: schema.draftLabQuota.labId,
+        draftId: draftedCounts.draftId,
+        activePeriodStart: sql`lower(${schema.draft.activePeriod})`
+          .mapWith(coerceDate)
+          .as('_active_period_start'),
+        labId: draftedCounts.labId,
         labName: schema.lab.name,
-        quota: sql`${schema.draftLabQuota.initialQuota} + ${schema.draftLabQuota.lotteryQuota}`
-          .mapWith(coerceNumber)
-          .as('quota'),
         archivedAt: schema.lab.deletedAt,
+        draftedStudents: draftedCounts.draftedStudents,
       })
-      .from(schema.draftLabQuota)
-      .innerJoin(schema.lab, eq(schema.draftLabQuota.labId, schema.lab.id));
-
-    const draftedCounts = await db
-      .select({
-        draftId: schema.facultyChoiceUser.draftId,
-        labId: schema.facultyChoiceUser.labId,
-        count: count(schema.facultyChoiceUser.studentUserId),
-      })
-      .from(schema.facultyChoiceUser)
-      .groupBy(({ draftId, labId }) => [draftId, labId]);
-
-    const quotaByDraftLab = index(
-      quotaSnapshots.map(q => ({
-        draftId: q.draftId.toString(),
-        labId: q.labId,
-        labName: q.labName,
-        quota: q.quota,
-        archivedAt: q.archivedAt,
-      })),
-      q => `${q.draftId}-${q.labId}`,
-    );
-
-    const draftedByDraftLab = index(
-      draftedCounts.map(d => ({
-        draftId: d.draftId.toString(),
-        labId: d.labId,
-        count: Number(d.count),
-      })),
-      d => `${d.draftId}-${d.labId}`,
-    );
-
-    const years = [...new Set(draftYears.map(d => d.year))].sort();
-
-    return years.map(year => {
-      const yearDrafts = draftYears.filter(d => d.year === year);
-      const labsMap = new Map<
-        string,
-        {
-          labId: string;
-          labName: string;
-          archivedAt: Date | null;
-          quota: number;
-          draftedStudents: number;
-        }
-      >();
-
-      for (const draft of yearDrafts) {
-        const draftId = draft.draftId.toString();
-        for (const [key, quotaData] of quotaByDraftLab) {
-          if (!key.startsWith(`${draftId}-`)) continue;
-          const { labId } = quotaData;
-          const draftedData = draftedByDraftLab.get(`${draftId}-${labId}`);
-
-          if (!labsMap.has(labId))
-            labsMap.set(labId, {
-              labId,
-              labName: quotaData.labName,
-              archivedAt: quotaData.archivedAt,
-              quota: 0,
-              draftedStudents: 0,
-            });
-
-          const lab = labsMap.get(labId);
-          if (!lab) throw new Error(`expected lab ${labId} in labsMap`);
-          lab.quota += quotaData.quota;
-          lab.draftedStudents += draftedData?.count ?? 0;
-        }
-      }
-
-      return {
-        year,
-        labs: Array.from(labsMap.values()),
-        totalDrafted: Array.from(labsMap.values()).reduce((sum, l) => sum + l.draftedStudents, 0),
-      };
-    });
+      .from(draftedCounts)
+      .innerJoin(schema.draft, eq(draftedCounts.draftId, schema.draft.id))
+      .innerJoin(schema.lab, eq(draftedCounts.labId, schema.lab.id))
+      .where(isNotNull(sql`upper(${schema.draft.activePeriod})`))
+      .orderBy(({ activePeriodStart, labId }) => [asc(activePeriodStart), asc(labId)]);
   });
 }

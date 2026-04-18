@@ -138,30 +138,28 @@ export interface DraftLabBordaScore {
   bordaScore: number;
 }
 
-export interface DraftStatsLabEntry {
-  labId: string;
-  labName: string;
+export interface DraftStatsRecord {
+  draftId: schema.Draft['id'];
+  activePeriodStart: Date;
+  labId: schema.Lab['id'];
+  labName: schema.Lab['name'];
   archivedAt: Date | null;
-  quota: number;
   draftedStudents: number;
 }
 
-export interface DraftStatsYear {
-  year: number;
-  labs: DraftStatsLabEntry[];
-  totalDrafted: number;
-}
-
-export interface DraftStatsSeries {
-  labId: string;
-  labName: string;
-  isArchived: boolean;
+export interface DraftStatsChartSeries {
+  key: string;
+  label: string;
   color: string;
-  points: { year: number; value: number | null }[];
 }
 
-export interface DraftStatsChartData {
-  years: number[];
-  quotaSeries: DraftStatsSeries[];
-  draftedSeries: DraftStatsSeries[];
+export interface DraftStatsChartDatum extends Record<string, number | string | null> {
+  year: number;
+}
+
+export interface DraftStatsMetricChartView {
+  config: Record<string, { label: string; color: string }>;
+  series: DraftStatsChartSeries[];
+  data: DraftStatsChartDatum[];
+  maxValue: number;
 }
