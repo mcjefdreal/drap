@@ -142,8 +142,6 @@ export interface DraftStatsRecord {
   draftId: schema.Draft['id'];
   activePeriodStart: Date;
   labId: schema.Lab['id'];
-  labName: schema.Lab['name'];
-  archivedAt: Date | null;
   draftedStudents: number;
 }
 

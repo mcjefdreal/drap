@@ -1,5 +1,6 @@
 import { group, max, rollup, sort, sum, union } from 'd3-array';
 
+import { assert } from '$lib/assert';
 import { CHART_COLORS } from '$lib/constants';
 import type {
   DraftStatsChartDatum,
@@ -14,16 +15,13 @@ export function getLocalYearBucket(date: Date) {
 function buildLabs(records: readonly DraftStatsRecord[]) {
   return Array.from(
     group(records, ({ labId }) => labId),
-    ([id, rows], index) => {
-      const [firstRow] = rows;
-      if (typeof firstRow === 'undefined') throw new Error(`expected stats rows for lab ${id}`);
-
+    ([id], index) => {
+      const color = CHART_COLORS[index % CHART_COLORS.length];
+      assert(typeof color !== 'undefined', 'chart color index out of bounds');
       return {
         id,
-        name: firstRow.labName,
         legendLabel: id.toUpperCase(),
-        color: CHART_COLORS[index % CHART_COLORS.length] ?? 'var(--chart-1)',
-        isArchived: rows.some(({ archivedAt }) => archivedAt !== null),
+        color,
       };
     },
   );
@@ -54,9 +52,7 @@ function buildMetricChartView(
 ): DraftStatsMetricChartView {
   const data: DraftStatsChartDatum[] = years.map(year => {
     const point: DraftStatsChartDatum = { year };
-
     for (const lab of labs) point[lab.id] = aggregates.get(year)?.get(lab.id)?.[metric] ?? null;
-
     return point;
   });
 

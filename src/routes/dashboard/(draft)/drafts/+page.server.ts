@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { asc, count, eq, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, asc, count, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import { decode } from 'decode-formdata';
 import { error, redirect } from '@sveltejs/kit';
 
@@ -171,18 +171,24 @@ async function getDraftStatsRecords(db: DbConnection) {
     return await db
       .with(draftedCounts)
       .select({
-        draftId: draftedCounts.draftId,
+        draftId: schema.draftLabQuota.draftId,
         activePeriodStart: sql`lower(${schema.draft.activePeriod})`
           .mapWith(coerceDate)
           .as('_active_period_start'),
-        labId: draftedCounts.labId,
-        labName: schema.lab.name,
-        archivedAt: schema.lab.deletedAt,
-        draftedStudents: draftedCounts.draftedStudents,
+        labId: schema.draftLabQuota.labId,
+        draftedStudents: sql`coalesce(${draftedCounts.draftedStudents}, 0)`
+          .mapWith(coerceNumber)
+          .as('_drafted_students'),
       })
-      .from(draftedCounts)
-      .innerJoin(schema.draft, eq(draftedCounts.draftId, schema.draft.id))
-      .innerJoin(schema.lab, eq(draftedCounts.labId, schema.lab.id))
+      .from(schema.draftLabQuota)
+      .innerJoin(schema.draft, eq(schema.draftLabQuota.draftId, schema.draft.id))
+      .leftJoin(
+        draftedCounts,
+        and(
+          eq(schema.draftLabQuota.draftId, draftedCounts.draftId),
+          eq(schema.draftLabQuota.labId, draftedCounts.labId),
+        ),
+      )
       .where(isNotNull(sql`upper(${schema.draft.activePeriod})`))
       .orderBy(({ activePeriodStart, labId }) => [asc(activePeriodStart), asc(labId)]);
   });

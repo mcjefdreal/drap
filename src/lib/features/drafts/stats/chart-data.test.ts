@@ -23,41 +23,37 @@ describe('buildAssignedStatsChart', () => {
       draftId: 1n,
       activePeriodStart: new Date('2024-01-02T00:00:00Z'),
       labId: 'csl',
-      labName: 'Computer Security Laboratory',
-      archivedAt: null,
       draftedStudents: 1,
     },
     {
       draftId: 2n,
       activePeriodStart: new Date('2024-06-15T00:00:00Z'),
       labId: 'csl',
-      labName: 'Computer Security Laboratory',
-      archivedAt: null,
       draftedStudents: 2,
     },
     {
       draftId: 3n,
       activePeriodStart: new Date('2024-06-15T00:00:00Z'),
       labId: 'ndsl',
-      labName: 'Networked and Distributed Systems Laboratory',
-      archivedAt: null,
       draftedStudents: 3,
     },
     {
       draftId: 4n,
       activePeriodStart: new Date('2025-02-10T00:00:00Z'),
       labId: 'ndsl',
-      labName: 'Networked and Distributed Systems Laboratory',
-      archivedAt: null,
       draftedStudents: 4,
     },
     {
       draftId: 5n,
       activePeriodStart: new Date('2023-03-20T00:00:00Z'),
       labId: 'acl',
-      labName: 'Algorithms and Complexity Laboratory',
-      archivedAt: new Date('2023-08-01T00:00:00Z'),
       draftedStudents: 1,
+    },
+    {
+      draftId: 6n,
+      activePeriodStart: new Date('2024-06-15T00:00:00Z'),
+      labId: 'acl',
+      draftedStudents: 0,
     },
   ] as const;
 
@@ -69,6 +65,7 @@ describe('buildAssignedStatsChart', () => {
       year: 2024,
       csl: 3,
       ndsl: 3,
+      acl: 0,
     });
 
     expect(chart.maxValue).toBe(4);
@@ -86,12 +83,19 @@ describe('buildAssignedStatsChart', () => {
     });
   });
 
-  test('leaves later years empty for labs with no rows', () => {
+  test('renders zero when a participating lab receives no students in a year', () => {
+    const chart = buildAssignedStatsChart(records);
+    const row2024 = chart.data.find(({ year }) => year === 2024);
+
+    expect(row2024).toMatchObject({ year: 2024, acl: 0 });
+  });
+
+  test('leaves later years empty for labs with no participating row', () => {
     const chart = buildAssignedStatsChart(records);
 
     expect(chart.data).toEqual([
       expect.objectContaining({ year: 2023, acl: 1 }),
-      expect.objectContaining({ year: 2024, acl: null }),
+      expect.objectContaining({ year: 2024, acl: 0 }),
       expect.objectContaining({ year: 2025, acl: null }),
     ]);
   });
@@ -119,9 +123,14 @@ describe('buildAssignedStatsChart', () => {
 
   test('keeps aggregated values correct even if the input order changes', () => {
     const sortedChart = buildAssignedStatsChart(records);
-    const shuffledRecords = [records[3], records[1], records[4], records[0], records[2]].filter(
-      record => typeof record !== 'undefined',
-    );
+    const shuffledRecords = [
+      records[3],
+      records[1],
+      records[5],
+      records[4],
+      records[0],
+      records[2],
+    ].filter(record => typeof record !== 'undefined');
     const shuffledChart = buildAssignedStatsChart(shuffledRecords);
 
     expect(shuffledChart.data).toEqual(sortedChart.data);
